@@ -1325,8 +1325,8 @@ function renderCommitChart(canvasId, commits){
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, width, height);
 
-  const data = Array.isArray(commits) ? commits : [];
-  if(!data.length){
+  const raw = Array.isArray(commits) ? commits : [];
+  if(!raw.length){
     ctx.fillStyle = "#7b8794";
     ctx.font = "13px Inter, sans-serif";
     ctx.textAlign = "center";
@@ -1335,69 +1335,161 @@ function renderCommitChart(canvasId, commits){
     return;
   }
 
-  const values = data.map(x => Number(x.count) || 0);
-  const max = Math.max(...values, 1);
-
-  const left = 42, right = 16, top = 18, bottom = 34;
-  const plotW = Math.max(width - left - right, 100);
-  const plotH = Math.max(height - top - bottom, 80);
-
-  // Grid and labels adapt to the active theme.
+  /*
+   * Visual-only activity upgrade.
+   * The backend data is untouched: this renderer expands the returned
+   * all-time monthly buckets into a complete month timeline so quiet months
+   * are visible instead of making the chart look empty.
+   */
   const darkMode = document.body.classList.contains("dark-theme");
-  ctx.strokeStyle = darkMode ? "#30363d" : "#e7eee8";
-  ctx.lineWidth = 1;
-  ctx.fillStyle = darkMode ? "#8b949e" : "#89958f";
-  ctx.font = "10px Inter, sans-serif";
+  const text = darkMode ? "#f0f6fc" : "#24302a";
+  const muted = darkMode ? "#8b949e" : "#7a8780";
+  const grid = darkMode ? "#30363d" : "#e5ebe7";
+  const panel = darkMode ? "#161b22" : "#f7faf8";
+  const green = "#2ea043";
+  const greenSoft = "rgba(46,160,67,.14)";
 
-  for(let i = 0; i <= 4; i++){
+  const byMonth = new Map();
+  raw.forEach(item => {
+    const label = String(item.label || "");
+    const count = Number(item.count) || 0;
+    const m = label.match(/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})$/);
+    if(m){
+      const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+      byMonth.set(`${m[2]}-${String(months[m[1]] + 1).padStart(2,"0")}`, {label, count});
+    } else {
+      byMonth.set(`x-${byMonth.size}`, {label, count});
+    }
+  });
+
+  const keys = [...byMonth.keys()].filter(k => !k.startsWith("x-"));
+  let data = [];
+  if(keys.length){
+    const first = new Date(keys[0] + "-01T00:00:00");
+    const last = new Date(keys[keys.length - 1] + "-01T00:00:00");
+    const cursor = new Date(first);
+    while(cursor <= last){
+      const key = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,"0")}`;
+      const label = cursor.toLocaleDateString("en-US", {month:"short", year:"numeric"});
+      data.push({label, count: byMonth.get(key)?.count || 0});
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+  } else {
+    data = raw.map(x => ({label:x.label || "", count:Number(x.count)||0}));
+  }
+
+  // Give a short-history repository enough visual breathing room.
+  if(data.length < 8 && keys.length){
+    const endDate = new Date(keys[keys.length - 1] + "-01T00:00:00");
+    const startDate = new Date(endDate);
+    startDate.setMonth(startDate.getMonth() - 7);
+    const existing = new Map(data.map(x => [x.label, x.count]));
+    data = [];
+    const cursor = new Date(startDate);
+    while(cursor <= endDate){
+      const label = cursor.toLocaleDateString("en-US", {month:"short", year:"numeric"});
+      data.push({label, count: existing.get(label) || 0});
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+  }
+
+  const values = data.map(x => x.count);
+  const total = Number(window.lastAnalysisData?.commit_total) || values.reduce((a,b)=>a+b,0);
+  const peak = Math.max(...values, 0);
+  const peakIndex = values.indexOf(peak);
+  const activeMonths = values.filter(v => v > 0).length;
+  const max = Math.max(peak, 1);
+
+  // Header summary inside the chart — keeps the graph useful even when activity is sparse.
+  ctx.fillStyle = panel;
+  ctx.beginPath();
+  ctx.roundRect(16, 10, width - 32, 48, 12, 12);
+  ctx.fill();
+
+  ctx.fillStyle = text;
+  ctx.font = "700 15px Inter, sans-serif";
+  ctx.fillText(`${total.toLocaleString()} commits`, 30, 31);
+  ctx.fillStyle = muted;
+  ctx.font = "11px Inter, sans-serif";
+  ctx.fillText(`${activeMonths} active month${activeMonths === 1 ? "" : "s"}`, 30, 47);
+
+  const peakText = peak > 0 ? `Peak: ${peak} · ${data[peakIndex].label}` : "No recorded activity";
+  ctx.fillStyle = muted;
+  ctx.textAlign = "right";
+  ctx.fillText(peakText, width - 30, 39);
+  ctx.textAlign = "left";
+
+  const left = 44, right = 24, top = 82, bottom = 40;
+  const plotW = Math.max(width - left - right, 100);
+  const plotH = Math.max(height - top - bottom, 90);
+  const baseY = top + plotH;
+
+  // Horizontal grid.
+  ctx.strokeStyle = grid;
+  ctx.lineWidth = 1;
+  ctx.font = "10px Inter, sans-serif";
+  ctx.fillStyle = muted;
+  for(let i=0;i<=4;i++){
     const y = top + plotH * i / 4;
     ctx.beginPath();
     ctx.moveTo(left, y);
     ctx.lineTo(left + plotW, y);
     ctx.stroke();
-
-    const label = Math.round(max * (1 - i / 4));
-    ctx.fillText(String(label), 6, y + 3);
+    const value = Math.round(max * (1 - i/4));
+    ctx.fillText(String(value), 8, y + 3);
   }
 
-  const points = data.map((item, i) => {
-    const x = left + plotW * i / Math.max(data.length - 1, 1);
-    const y = top + plotH - ((Number(item.count) || 0) / max) * plotH;
-    return {x, y};
-  });
+  // Smooth area + line.
+  const step = plotW / Math.max(data.length - 1, 1);
+  const points = data.map((item,i)=>({
+    x: left + step*i,
+    y: baseY - (item.count / max) * plotH
+  }));
 
-  // Area.
   ctx.beginPath();
-  points.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
-  ctx.lineTo(points[points.length - 1].x, top + plotH);
-  ctx.lineTo(points[0].x, top + plotH);
+  points.forEach((p,i)=> i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
+  ctx.lineTo(points[points.length-1].x, baseY);
+  ctx.lineTo(points[0].x, baseY);
   ctx.closePath();
-  ctx.fillStyle = "rgba(107,175,74,.12)";
+  ctx.fillStyle = greenSoft;
   ctx.fill();
 
-  // Line.
   ctx.beginPath();
-  points.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
-  ctx.strokeStyle = "#6BAF4A";
-  ctx.lineWidth = 3;
+  points.forEach((p,i)=> i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
+  ctx.strokeStyle = green;
+  ctx.lineWidth = 2.5;
   ctx.stroke();
 
-  // Points.
-  ctx.fillStyle = "#6BAF4A";
-  points.forEach(p => {
+  // GitHub-inspired activity cells/bars at each month.
+  const barWidth = Math.min(34, Math.max(7, step * .55));
+  data.forEach((item,i)=>{
+    const p = points[i];
+    const intensity = item.count ? Math.max(.22, item.count / max) : 0;
+    const barH = item.count ? Math.max(6, intensity * plotH * .72) : 3;
+    ctx.fillStyle = item.count ? `rgba(46,160,67,${0.18 + intensity*.62})` : (darkMode ? "#21262d" : "#edf2ee");
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+    ctx.roundRect(p.x - barWidth/2, baseY - barH, barWidth, barH, 5);
     ctx.fill();
   });
 
-  // X labels.
-  ctx.fillStyle = darkMode ? "#8b949e" : "#89958f";
+  // Points and labels.
+  points.forEach((p,i)=>{
+    if(data[i].count <= 0) return;
+    ctx.fillStyle = darkMode ? "#b7f0c0" : "#ffffff";
+    ctx.strokeStyle = green;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,4.5,0,Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+  });
+
+  ctx.fillStyle = muted;
   ctx.font = "9px Inter, sans-serif";
-  const step = Math.max(1, Math.ceil(data.length / 6));
-  data.forEach((item, i) => {
-    if(i % step === 0 || i === data.length - 1){
-      const x = points[i].x;
-      ctx.fillText(item.label || "", Math.max(left, x - 16), height - 9);
+  const labelStep = Math.max(1, Math.ceil(data.length / 7));
+  data.forEach((item,i)=>{
+    if(i % labelStep === 0 || i === data.length-1){
+      ctx.fillText(item.label || "", Math.max(left, Math.min(points[i].x - 18, width - 65)), height - 13);
     }
   });
 }
