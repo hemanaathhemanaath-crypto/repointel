@@ -996,7 +996,7 @@ body.dark-theme .ai-ask input{color:#f0f6fc !important}
 
       <div class="grid layout">
         <div class="card chart-card">
-          <div class="card-head"><h2>Development Activity</h2><span>Last 12 weeks</span></div>
+          <div class="card-head"><h2>Development Activity</h2><span>All time • Live GitHub data</span></div>
           <div class="chart">
             <canvas id="commitChart"></canvas>
           </div>
@@ -1047,7 +1047,7 @@ body.dark-theme .ai-ask input{color:#f0f6fc !important}
 
       <div class="insight">
         <div class="insight-head"><div class="ai">✦</div> AI Repository Insight <span class="badge green" id="insightBadge">Waiting</span></div>
-        <p id="insight">The repository shows strong and consistent development activity. Contributor participation is healthy, while the growing number of open issues may create additional maintenance pressure. This area should be monitored as the project scales.</p>
+        <p id="insight">The repository development activity is summarized across its full commit history. Contributor participation is healthy, while the growing number of open issues may create additional maintenance pressure. This area should be monitored as the project scales.</p>
       </div>
 
       
@@ -1055,10 +1055,10 @@ body.dark-theme .ai-ask input{color:#f0f6fc !important}
         <section class="page-view" data-page="activity">
           <div class="view-title">Development Activity</div>
           <div class="view-subtitle">Commit trends and repository development velocity.</div>
-          <div class="card view-full"><div class="card-head"><h2>Commit Activity</h2><span id="activityRange">Last 12 weeks • Live GitHub data</span></div><div class="chart" style="height:330px"><canvas id="activityChartFull"></canvas></div></div>
+          <div class="card view-full"><div class="card-head"><h2>Commit Activity</h2><span id="activityRange">All time • Live GitHub data</span></div><div class="chart" style="height:330px"><canvas id="activityChartFull"></canvas></div></div>
           <div class="view-grid" style="margin-top:18px">
   <div class="card kpi"><div class="kpi-top">All-time commits <div class="kpi-icon">⌁</div></div><div class="stat-big" id="activityAllTimeCommits">—</div><div class="kpi-foot">GitHub repository total</div></div>
-  <div class="card kpi"><div class="kpi-top">Recent commits <div class="kpi-icon">⌁</div></div><div class="stat-big" id="activityCommits">—</div><div class="kpi-foot">Last 12 weeks</div></div>
+  <div class="card kpi"><div class="kpi-top">Total commits <div class="kpi-icon">⌁</div></div><div class="stat-big" id="activityCommits">—</div><div class="kpi-foot">All-time GitHub commits</div></div>
   <div class="card kpi"><div class="kpi-top">Repository updated <div class="kpi-icon">◷</div></div><div class="stat-big" id="activityUpdated">—</div><div class="kpi-foot">Last GitHub update</div></div>
 </div>
         </section>
@@ -1427,7 +1427,7 @@ async function getAllContributors(owner, repo){
 }
 
 async function getCommitTotal(owner, repo){
-  // Kept for backwards compatibility. This endpoint only exposes weekly
+  // Kept for backwards compatibility. The dashboard now uses the all-time backend activity series.
   // activity, so it must NOT be treated as an all-time commit count.
   return null;
 }
@@ -1792,10 +1792,10 @@ function fallbackReportNarrative(){
   return {
     summary:
       `${repo.full_name || repo.name || "This repository"} has an overall RepoIntel health score of ${h.overall ?? "N/A"}/100. ` +
-      `GitHub reports ${d.commit_total ?? 0} total commits, while the loaded recent 12-week activity contains ${recent} commits. ` +
+      `GitHub reports ${d.commit_total ?? 0} total commits, while the loaded all-time activity contains ${recent} commits. ` +
       `The current weakest calculated signal is ${weakest[0]} at ${weakest[1]}/100.`,
     activity:
-      `The recent activity chart contains ${activity.length} weekly observations. ` +
+      `The activity chart contains ${activity.length} monthly observations across the repository history. ` +
       `Across the displayed period, ${recent} commits were recorded. ` +
       (maxWeekItem ? `The highest observed week is ${maxWeekItem.label} with ${maxWeek} commits. ` : "") +
       `This recent series should be interpreted separately from the repository's all-time commit total.`,
@@ -1874,14 +1874,14 @@ function renderDetailedReport(aiText){
       <div class="report-kpis">
         <div class="report-kpi"><div class="label">Health</div><div class="value">${h.overall ?? "N/A"}/100</div></div>
         <div class="report-kpi"><div class="label">All-time commits</div><div class="value">${reportMetric(d.commit_total)}</div></div>
-        <div class="report-kpi"><div class="label">Recent commits</div><div class="value">${formatNumber(recent)}</div></div>
+        <div class="report-kpi"><div class="label">Commits in history</div><div class="value">${formatNumber(recent)}</div></div>
         <div class="report-kpi"><div class="label">Contributors</div><div class="value">${reportMetric(d.contributors?.length)}</div></div>
       </div>
     </div>
 
     <div class="report-grid">
       <div class="card report-chart-card report-section">
-        <h3>Development Activity — Last 12 Weeks</h3>
+        <h3>Development Activity — All Time</h3>
         <div class="chart"><canvas id="reportActivityChart"></canvas></div>
       </div>
       <div class="card report-section" style="padding:18px">
