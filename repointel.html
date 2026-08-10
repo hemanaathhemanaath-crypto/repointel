@@ -930,6 +930,7 @@ body.dark-theme .ai-ask input{color:#f0f6fc !important}
 </style>
 
 
+<style id="repointel-report-styles">
 /* RepoIntel Reports — detailed GitHub-style report system */
 .report-shell{display:flex;flex-direction:column;gap:16px}
 .report-cover-pro{padding:24px;border:1px solid #b7ebc6;background:radial-gradient(circle at 92% 12%,rgba(46,164,79,.18),transparent 28%),linear-gradient(135deg,#f5fff7 0%,#fff 58%,#f4faf5 100%);border-radius:12px}
@@ -968,6 +969,18 @@ body.dark-theme .report-contributor-avatar{background:#1f3a27;color:#7ee787}body
 @media(max-width:1000px){.report-kpis-pro{grid-template-columns:repeat(2,1fr)}.report-metadata-grid{grid-template-columns:repeat(2,1fr)}.report-metadata-grid div:nth-child(4n){border-right:1px solid #e8ebf0}.report-metadata-grid div:nth-child(2n){border-right:0}.report-metadata-grid div:nth-last-child(-n+4){border-bottom:1px solid #e8ebf0}.report-metadata-grid div:nth-last-child(-n+2){border-bottom:0}}
 @media(max-width:800px){.report-cover-top{flex-direction:column}.report-health-badge{align-self:flex-start}.report-grid-wide{grid-template-columns:1fr}}
 @media(max-width:560px){.report-kpis-pro{grid-template-columns:1fr}.report-metadata-grid{grid-template-columns:1fr}.report-metadata-grid div,.report-metadata-grid div:nth-child(2n){border-right:0!important;border-bottom:1px solid #e8ebf0!important}.report-metadata-grid div:last-child{border-bottom:0!important}}
+</style>
+
+<style id="repointel-report-print-fix">
+@media print{
+  body{background:#fff !important;color:#1f2328 !important;}
+  .main{margin-left:0 !important;width:100% !important;}
+  .content{max-width:none !important;padding:0 !important;}
+  .page-view[data-page="reports"]{display:block !important;}
+  #reportContent.report-shell{display:flex !important;gap:14px !important;}
+  .report-cover-pro,.report-panel,.report-kpi,.report-section-intro,.report-recommendations,.report-ai-body,.report-metadata-grid{break-inside:avoid;page-break-inside:avoid;}
+}
+</style>
 
 </head>
 <body>
