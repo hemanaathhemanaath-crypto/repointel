@@ -929,6 +929,46 @@ body.dark-theme .ai-ask input{color:#f0f6fc !important}
 
 </style>
 
+
+/* RepoIntel Reports — detailed GitHub-style report system */
+.report-shell{display:flex;flex-direction:column;gap:16px}
+.report-cover-pro{padding:24px;border:1px solid #b7ebc6;background:radial-gradient(circle at 92% 12%,rgba(46,164,79,.18),transparent 28%),linear-gradient(135deg,#f5fff7 0%,#fff 58%,#f4faf5 100%);border-radius:12px}
+.report-cover-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+.report-eyebrow,.report-section-kicker{font-size:9px;letter-spacing:.12em;font-weight:800;color:#1f883d}
+.report-eyebrow{display:flex;align-items:center;gap:7px;margin-bottom:8px}.report-eyebrow span{width:7px;height:7px;border-radius:50%;background:#2da44e;box-shadow:0 0 0 4px #dafbe1}
+.report-cover-pro h2{font-size:25px;line-height:1.2;margin:0 0 8px;color:#1f2328}.report-cover-pro p{max-width:820px;font-size:12px;line-height:1.7;color:#656d76;margin:0}
+.report-health-badge{min-width:126px;padding:12px 14px;border:1px solid #d8dee4;border-radius:10px;background:#fff;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 4px 14px rgba(31,35,40,.06)}
+.report-health-badge strong{font-size:28px;line-height:1;color:#1f2328}.report-health-badge span{font-size:9px;color:#656d76}.report-health-badge em{font-style:normal;font-size:9px;font-weight:800;margin-top:4px}
+.report-health-badge.strong{border-color:#aceebb;background:#f0fff3;color:#1a7f37}.report-health-badge.moderate{border-color:#e3d18b;background:#fffdf0;color:#9a6700}.report-health-badge.attention{border-color:#ffb3ae;background:#fff5f4;color:#cf222e}
+.report-kpis-pro{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:20px}.report-kpi{background:rgba(255,255,255,.82);border:1px solid #d8dee4}.report-kpi small{display:block;color:#8b949e;font-size:9px;margin-top:3px}
+.report-section-intro{padding:4px 3px 2px}.report-section-intro h3{margin:4px 0 5px;font-size:17px;color:#1f2328}.report-section-intro p{margin:0;color:#656d76;font-size:11px;line-height:1.8;max-width:1000px}
+.report-grid-wide{grid-template-columns:minmax(0,1.65fr) minmax(310px,.75fr)}.report-panel{overflow:hidden}
+.report-panel-head{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:16px 18px 12px;border-bottom:1px solid #d8dee4}.report-panel-head h3{font-size:14px;margin:4px 0 0;color:#1f2328}.report-panel-head>span{font-size:9px;color:#8b949e}
+.report-live-tag{padding:4px 7px;border-radius:999px;background:#dafbe1;border:1px solid #aceebb;color:#1a7f37!important;font-weight:800}
+.report-chart-large{height:310px;padding:14px 18px 5px}.report-chart-foot{display:flex;gap:18px;flex-wrap:wrap;padding:10px 18px 14px;border-top:1px solid #e8ebf0;font-size:9px;color:#8b949e}.report-chart-foot b{color:#1f2328;margin-right:3px}
+.report-score-list{padding:15px 18px 18px}.report-score-item{margin:0 0 15px}.report-score-item:last-child{margin-bottom:0}.report-score-top{display:flex;justify-content:space-between;font-size:10px;color:#656d76;margin-bottom:6px}.report-score-top b{color:#1f2328}.report-score-bar{height:7px;border-radius:99px;background:#edf0f2;overflow:hidden}.report-score-bar i{display:block;height:100%;border-radius:99px;background:#2da44e}.report-score-bar i.moderate{background:#bf8700}.report-score-bar i.attention{background:#cf222e}.report-score-item small{display:block;margin-top:4px;font-size:8px;color:#8b949e}
+.report-table-pro th,.report-table-pro td{padding:10px 18px}
+.report-language-list{padding:12px 18px 17px}.report-language{margin:0 0 13px}.report-language:last-child{margin-bottom:0}.report-language>div:first-child{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#656d76;margin-bottom:5px}.report-language>div:first-child span{display:flex;align-items:center;gap:7px}.report-language b{color:#1f2328}.report-language-dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:#2da44e}.report-language-dot.dot-1{background:#0969da}.report-language-dot.dot-2{background:#bf8700}.report-language-dot.dot-3{background:#8250df}.report-language-dot.dot-4{background:#cf222e}.report-language-dot.dot-5{background:#6e7781}.report-language-bar{height:5px;border-radius:99px;background:#edf0f2;overflow:hidden}.report-language-bar i{display:block;height:100%;border-radius:99px;background:#2da44e}
+.report-contributor-highlight{display:flex;align-items:center;gap:10px;padding:14px 18px;background:#f6fbf7;border-bottom:1px solid #e8ebf0}.report-contributor-avatar{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:#dafbe1;color:#1f883d;font-weight:800}.report-contributor-highlight strong{display:block;font-size:11px;color:#1f2328}.report-contributor-highlight span{display:block;font-size:9px;color:#8b949e;margin-top:2px}
+.report-maintenance-grid{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #e8ebf0}.report-maintenance-grid div{padding:15px 16px;border-right:1px solid #e8ebf0;border-bottom:1px solid #e8ebf0}.report-maintenance-grid div:nth-child(even){border-right:0}.report-maintenance-grid div:nth-last-child(-n+2){border-bottom:0}.report-maintenance-grid strong{display:block;font-size:20px;color:#1f2328}.report-maintenance-grid span{display:block;font-size:9px;color:#8b949e;margin-top:2px}
+.report-observation{margin:14px 16px;padding:11px 12px;border-left:3px solid #2da44e;border-radius:7px;background:#f5fbf6}.report-observation b{display:block;font-size:9px;color:#1f883d;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em}.report-observation span{font-size:10px;line-height:1.6;color:#656d76}
+.report-metadata-grid{display:grid;grid-template-columns:repeat(4,1fr)}.report-metadata-grid div{padding:13px 16px;border-right:1px solid #e8ebf0;border-bottom:1px solid #e8ebf0}.report-metadata-grid div:nth-child(4n){border-right:0}.report-metadata-grid div:nth-last-child(-n+4){border-bottom:0}.report-metadata-grid span{display:block;font-size:8px;color:#8b949e;text-transform:uppercase;letter-spacing:.06em}.report-metadata-grid strong{display:block;font-size:10px;color:#1f2328;margin-top:4px;word-break:break-word}
+.report-recommendations ol{margin:0;padding:14px 22px 17px 38px}.report-recommendations li{font-size:10px;line-height:1.7;color:#4b5563;padding:4px 0}.report-recommendations li::marker{color:#2da44e;font-weight:800}
+.report-ai-body{padding:4px 18px 20px}.report-ai-body h4{font-size:11px;margin:17px 0 7px;color:#1f2328;letter-spacing:.04em}.report-ai-body p,.report-ai-body li{font-size:10.5px;line-height:1.8;color:#4b5563}.report-ai-body ul{margin:5px 0 12px;padding-left:20px}
+.report-ai-summary{display:flex;align-items:center;gap:10px;margin:9px 0 2px;padding:10px 11px;background:#f5fbf6;border:1px solid #dcefd2;border-radius:8px}.report-ai-icon{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:#2da44e;color:#fff;font-weight:800}.report-ai-summary strong{display:block;font-size:10px;color:#1f2328}.report-ai-summary span{display:block;font-size:8px;color:#8b949e;margin-top:2px}
+body.dark-theme .report-cover-pro{background:radial-gradient(circle at 92% 12%,rgba(46,164,79,.17),transparent 28%),linear-gradient(135deg,#101b14 0%,#161b22 60%,#101713 100%)!important;border-color:#2ea043!important}
+body.dark-theme .report-cover-pro h2,body.dark-theme .report-health-badge strong,body.dark-theme .report-section-intro h3,body.dark-theme .report-panel-head h3,body.dark-theme .report-score-top b,body.dark-theme .report-chart-foot b,body.dark-theme .report-language b,body.dark-theme .report-contributor-highlight strong,body.dark-theme .report-maintenance-grid strong,body.dark-theme .report-metadata-grid strong,body.dark-theme .report-ai-body h4,body.dark-theme .report-ai-summary strong{color:#f0f6fc!important}
+body.dark-theme .report-cover-pro p,body.dark-theme .report-section-intro p,body.dark-theme .report-health-badge span,body.dark-theme .report-panel-head>span,body.dark-theme .report-chart-foot,body.dark-theme .report-score-top,body.dark-theme .report-score-item small,body.dark-theme .report-language>div:first-child,body.dark-theme .report-contributor-highlight span,body.dark-theme .report-maintenance-grid span,body.dark-theme .report-observation span,body.dark-theme .report-metadata-grid span,body.dark-theme .report-recommendations li,body.dark-theme .report-ai-body p,body.dark-theme .report-ai-body li,body.dark-theme .report-ai-summary span{color:#8b949e!important}
+body.dark-theme .report-kpi,body.dark-theme .report-health-badge,body.dark-theme .report-panel{background:#161b22!important;border-color:#30363d!important}
+body.dark-theme .report-panel-head,body.dark-theme .report-chart-foot,body.dark-theme .report-contributor-highlight,body.dark-theme .report-maintenance-grid div,body.dark-theme .report-metadata-grid div{border-color:#30363d!important}
+body.dark-theme .report-score-bar,body.dark-theme .report-language-bar{background:#30363d!important}
+body.dark-theme .report-observation,body.dark-theme .report-ai-summary{background:#122018!important;border-color:#2ea043!important}
+body.dark-theme .report-table-pro th,body.dark-theme .report-table-pro td{border-color:#30363d!important}body.dark-theme .report-table-pro th{background:#161b22!important;color:#8b949e!important}body.dark-theme .report-table-pro td{color:#c9d1d9!important}
+body.dark-theme .report-contributor-avatar{background:#1f3a27;color:#7ee787}body.dark-theme .report-kpi small{color:#8b949e!important}
+@media(max-width:1000px){.report-kpis-pro{grid-template-columns:repeat(2,1fr)}.report-metadata-grid{grid-template-columns:repeat(2,1fr)}.report-metadata-grid div:nth-child(4n){border-right:1px solid #e8ebf0}.report-metadata-grid div:nth-child(2n){border-right:0}.report-metadata-grid div:nth-last-child(-n+4){border-bottom:1px solid #e8ebf0}.report-metadata-grid div:nth-last-child(-n+2){border-bottom:0}}
+@media(max-width:800px){.report-cover-top{flex-direction:column}.report-health-badge{align-self:flex-start}.report-grid-wide{grid-template-columns:1fr}}
+@media(max-width:560px){.report-kpis-pro{grid-template-columns:1fr}.report-metadata-grid{grid-template-columns:1fr}.report-metadata-grid div,.report-metadata-grid div:nth-child(2n){border-right:0!important;border-bottom:1px solid #e8ebf0!important}.report-metadata-grid div:last-child{border-bottom:0!important}}
+
 </head>
 <body>
 <div class="app">
@@ -1870,36 +1910,36 @@ function fallbackReportNarrative(){
   const h = d.health || {};
   const issues = d.issues || {};
   const activity = Array.isArray(d.commit_activity) ? d.commit_activity : [];
-  const recent = activity.reduce((s,x)=>s+(Number(x.count)||0),0);
-  const maxWeek = activity.length ? Math.max(...activity.map(x=>Number(x.count)||0)) : 0;
-  const maxWeekItem = activity.find(x => (Number(x.count)||0) === maxWeek);
+  const chartCommits = activity.reduce((s,x)=>s+(Number(x.count)||0),0);
 
-  const weakest = [
-    ["development activity", Number(h.activity)||0],
-    ["maintenance", Number(h.maintenance)||0],
-    ["contributor health", Number(h.contributorScore)||0],
-    ["issue health", Number(h.issueScore)||0]
-  ].sort((a,b)=>a[1]-b[1])[0];
+  const signals = [
+    ["Development activity", Number(h.activity)],
+    ["Maintenance", Number(h.maintenance)],
+    ["Contributor health", Number(h.contributorScore)],
+    ["Issue health", Number(h.issueScore)]
+  ].filter(x => Number.isFinite(x[1])).sort((a,b)=>a[1]-b[1]);
+
+  const weakest = signals[0] || ["Development activity", null];
 
   return {
     summary:
       `${repo.full_name || repo.name || "This repository"} has an overall RepoIntel health score of ${h.overall ?? "N/A"}/100. ` +
-      `GitHub reports ${d.commit_total ?? 0} total commits, while the loaded all-time activity contains ${recent} commits. ` +
-      `The current weakest calculated signal is ${weakest[0]} at ${weakest[1]}/100.`,
+      `GitHub reports ${d.commit_total ?? "N/A"} all-time commits, while the activity series represents ${chartCommits} commits across ${activity.length} loaded periods. ` +
+      `The weakest calculated signal is ${weakest[0]}${weakest[1] != null ? ` at ${weakest[1]}/100` : ""}.`,
     activity:
-      `The activity chart contains ${activity.length} monthly observations across the repository history. ` +
-      `Across the displayed period, ${recent} commits were recorded. ` +
-      (maxWeekItem ? `The highest observed week is ${maxWeekItem.label} with ${maxWeek} commits. ` : "") +
-      `This recent series should be interpreted separately from the repository's all-time commit total.`,
+      activity.length
+        ? `The all-time activity series contains ${activity.length} loaded periods and ${chartCommits} represented commits. ` +
+          `The chart should be read as the repository's returned activity history rather than as a replacement for the paginated GitHub all-time commit total.`
+        : `No commit activity series was returned by the backend, so development trends cannot be evaluated from the current dataset.`,
     collaboration:
-      `${d.contributors?.length || 0} public contributors are represented in the loaded contributor data. ` +
-      `Contributor health is ${h.contributorScore ?? "N/A"}/100, which reflects both contributor count and contribution distribution.`,
+      `${Array.isArray(d.contributors) ? d.contributors.length : 0} public contributors are represented in the loaded data. ` +
+      `Contributor health is ${h.contributorScore ?? "N/A"}/100.`,
     maintenance:
-      `There are ${issues.open_issues ?? 0} open issues, ${issues.closed_issues ?? 0} closed issues, and ${issues.pull_requests ?? 0} pull requests in the current GitHub totals. ` +
+      `The current GitHub totals contain ${issues.open_issues ?? 0} open issues, ${issues.closed_issues ?? 0} closed issues, and ${issues.pull_requests ?? 0} pull requests. ` +
       `Issue health is ${h.issueScore ?? "N/A"}/100 and maintenance is ${h.maintenance ?? "N/A"}/100.`,
     conclusion:
       `RepoIntel currently rates the repository at ${h.overall ?? "N/A"}/100. ` +
-      `The next improvement priority should be ${weakest[0]}, followed by maintaining the areas that already score strongly.`
+      `The first improvement priority should be ${weakest[0]}, while preserving the areas that already score strongly.`
   };
 }
 
@@ -1918,21 +1958,57 @@ function basicMarkdownToHtml(text){
       out += `<h4>${escapeReportHtml(line.replace(/^#{1,3}\s+/,""))}</h4>`;
       continue;
     }
+
     if(/^[A-Z][A-Z \/&-]{3,}$/.test(line)){
       closeList();
       out += `<h4>${escapeReportHtml(line)}</h4>`;
       continue;
     }
+
     if(/^[-*]\s+/.test(line)){
       if(!inList){ out += "<ul>"; inList=true; }
       out += `<li>${escapeReportHtml(line.replace(/^[-*]\s+/,""))}</li>`;
       continue;
     }
+
     closeList();
     out += `<p>${escapeReportHtml(line)}</p>`;
   }
+
   closeList();
   return out;
+}
+
+function reportScoreClass(score){
+  const n = Number(score);
+  if(!Number.isFinite(n)) return "neutral";
+  if(n >= 80) return "strong";
+  if(n >= 60) return "moderate";
+  return "attention";
+}
+
+function reportScoreLabel(score){
+  const n = Number(score);
+  if(!Number.isFinite(n)) return "Unavailable";
+  if(n >= 80) return "Strong";
+  if(n >= 60) return "Moderate";
+  return "Needs attention";
+}
+
+function getReportActivityStats(activity){
+  const rows = Array.isArray(activity)
+    ? activity.map(x => ({
+        label: String(x?.label || "Unknown"),
+        count: Number(x?.count) || 0
+      }))
+    : [];
+
+  const total = rows.reduce((s,x)=>s+x.count,0);
+  const peak = rows.length ? rows.reduce((a,b)=>b.count>a.count?b:a) : null;
+  const nonZero = rows.filter(x=>x.count>0).length;
+  const average = rows.length ? total / rows.length : 0;
+
+  return {rows,total,peak,nonZero,average};
 }
 
 function renderDetailedReport(aiText){
@@ -1945,87 +2021,244 @@ function renderDetailedReport(aiText){
   const h = d.health || {};
   const issues = d.issues || {};
   const activity = Array.isArray(d.commit_activity) ? d.commit_activity : [];
-  const recent = activity.reduce((s,x)=>s+(Number(x.count)||0),0);
+  const activityStats = getReportActivityStats(activity);
   const langs = getLanguageRows();
   const contributors = getTopContributors();
   const fallback = fallbackReportNarrative();
 
+  const totalContrib = contributors.reduce((s,x)=>s+x.contributions,0);
+  const topContributor = contributors[0];
+  const closedTotal = (Number(issues.open_issues)||0) + (Number(issues.closed_issues)||0);
+  const closureRate = closedTotal ? ((Number(issues.closed_issues)||0)/closedTotal*100) : null;
+
+  const signals = [
+    ["Overall health", h.overall],
+    ["Development activity", h.activity],
+    ["Maintenance", h.maintenance],
+    ["Contributor health", h.contributorScore],
+    ["Issue health", h.issueScore]
+  ];
+
+  const weakest = signals
+    .slice(1)
+    .filter(x=>Number.isFinite(Number(x[1])))
+    .sort((a,b)=>Number(a[1])-Number(b[1]))[0];
+
+  const recommendations = [];
+  if(weakest){
+    recommendations.push(`Prioritize ${weakest[0].toLowerCase()} first; it is currently the weakest calculated health signal at ${weakest[1]}/100.`);
+  }
+  if(activityStats.rows.length && activityStats.nonZero < activityStats.rows.length){
+    recommendations.push(`Review the inactive periods in the activity history to determine whether they represent planned pauses or reduced development velocity.`);
+  }
+  if(topContributor && topContributor.share >= 70){
+    recommendations.push(`Reduce contributor concentration where practical by documenting ownership and distributing work across more contributors.`);
+  }
+  if(Number(issues.open_issues) > 0){
+    recommendations.push(`Triage the ${formatNumber(Number(issues.open_issues))} open issues and separate active work from stale backlog items.`);
+  }
+  if(!recommendations.length){
+    recommendations.push("Maintain the current development practices and continue monitoring the health signals as new GitHub activity arrives.");
+  }
+
+  const metadataRows = [
+    ["Visibility", repo.visibility],
+    ["Default branch", repo.default_branch],
+    ["Primary language", repo.language],
+    ["License", repo.license?.spdx_id || repo.license?.name],
+    ["Repository size", repo.size != null ? `${formatNumber(Number(repo.size))} KB` : null],
+    ["Created", repo.created_at ? new Date(repo.created_at).toLocaleString() : null],
+    ["Last updated", repo.updated_at ? new Date(repo.updated_at).toLocaleString() : null],
+    ["Last push", repo.pushed_at ? new Date(repo.pushed_at).toLocaleString() : null]
+  ].filter(([,v])=>v !== null && v !== undefined && v !== "");
+
   const aiSections = aiText
     ? basicMarkdownToHtml(aiText)
-    : `<p>${escapeReportHtml(fallback.summary)}</p>
-       <h4>DEVELOPMENT ACTIVITY</h4><p>${escapeReportHtml(fallback.activity)}</p>
-       <h4>COLLABORATION AND CONTRIBUTORS</h4><p>${escapeReportHtml(fallback.collaboration)}</p>
-       <h4>ISSUES AND MAINTENANCE</h4><p>${escapeReportHtml(fallback.maintenance)}</p>
-       <h4>CONCLUSION</h4><p>${escapeReportHtml(fallback.conclusion)}</p>`;
+    : `
+      <div class="report-ai-summary">
+        <div class="report-ai-icon">✦</div>
+        <div>
+          <strong>Data-backed interpretation</strong>
+          <span>Generated locally from the live repository dataset</span>
+        </div>
+      </div>
+      <h4>EXECUTIVE INTERPRETATION</h4>
+      <p>${escapeReportHtml(fallback.summary)}</p>
+      <h4>DEVELOPMENT ACTIVITY</h4>
+      <p>${escapeReportHtml(fallback.activity)}</p>
+      <h4>COLLABORATION AND CONTRIBUTORS</h4>
+      <p>${escapeReportHtml(fallback.collaboration)}</p>
+      <h4>ISSUES AND MAINTENANCE</h4>
+      <p>${escapeReportHtml(fallback.maintenance)}</p>
+      <h4>CONCLUSION</h4>
+      <p>${escapeReportHtml(fallback.conclusion)}</p>
+    `;
 
-  container.className = "";
+  container.className = "report-shell";
   container.innerHTML = `
-    <div class="report-cover">
-      <h2>${escapeReportHtml(repo.full_name || repo.name || "Repository Report")}</h2>
-      <p>${escapeReportHtml(repo.description || "Repository health and development analysis generated from the currently available GitHub data.")}</p>
-      <div class="report-kpis">
-        <div class="report-kpi"><div class="label">Health</div><div class="value">${h.overall ?? "N/A"}/100</div></div>
-        <div class="report-kpi"><div class="label">All-time commits</div><div class="value">${reportMetric(d.commit_total)}</div></div>
-        <div class="report-kpi"><div class="label">Commits in history</div><div class="value">${formatNumber(recent)}</div></div>
-        <div class="report-kpi"><div class="label">Contributors</div><div class="value">${reportMetric(d.contributors?.length)}</div></div>
+    <div class="report-cover report-cover-pro">
+      <div class="report-cover-top">
+        <div>
+          <div class="report-eyebrow"><span></span> REPOSITORY INTELLIGENCE REPORT</div>
+          <h2>${escapeReportHtml(repo.full_name || repo.name || "Repository Report")}</h2>
+          <p>${escapeReportHtml(repo.description || "Repository health and development analysis generated from the currently available GitHub data.")}</p>
+        </div>
+        <div class="report-health-badge ${reportScoreClass(h.overall)}">
+          <strong>${h.overall ?? "N/A"}</strong>
+          <span>/ 100 health</span>
+          <em>${reportScoreLabel(h.overall)}</em>
+        </div>
+      </div>
+
+      <div class="report-kpis report-kpis-pro">
+        <div class="report-kpi"><div class="label">GitHub commits</div><div class="value">${reportMetric(d.commit_total)}</div><small>Paginated all-time total</small></div>
+        <div class="report-kpi"><div class="label">Charted commits</div><div class="value">${formatNumber(activityStats.total)}</div><small>${activityStats.rows.length} activity periods</small></div>
+        <div class="report-kpi"><div class="label">Contributors</div><div class="value">${reportMetric(Array.isArray(d.contributors) ? d.contributors.length : 0)}</div><small>Public contributors</small></div>
+        <div class="report-kpi"><div class="label">Open issues</div><div class="value">${reportMetric(issues.open_issues)}</div><small>${closureRate == null ? "No issue history" : `${closureRate.toFixed(1)}% closed`}</small></div>
+      </div>
+    </div>
+
+    <div class="report-section report-section-intro">
+      <div>
+        <span class="report-section-kicker">EXECUTIVE SUMMARY</span>
+        <h3>What the repository data says</h3>
+      </div>
+      <p>${escapeReportHtml(fallback.summary)}</p>
+    </div>
+
+    <div class="report-grid report-grid-wide">
+      <div class="card report-chart-card report-section report-panel">
+        <div class="report-panel-head">
+          <div><span class="report-section-kicker">ACTIVITY</span><h3>Development Activity — All Time</h3></div>
+          <span class="report-live-tag">LIVE DATA</span>
+        </div>
+        <div class="chart report-chart-large"><canvas id="reportActivityChart"></canvas></div>
+        <div class="report-chart-foot">
+          <span><b>${formatNumber(activityStats.total)}</b> charted commits</span>
+          <span><b>${formatNumber(activityStats.nonZero)}</b> active periods</span>
+          <span><b>${activityStats.peak ? formatNumber(activityStats.peak.count) : "0"}</b> peak period</span>
+        </div>
+      </div>
+
+      <div class="card report-section report-panel">
+        <div class="report-panel-head">
+          <div><span class="report-section-kicker">HEALTH</span><h3>Health Signals</h3></div>
+        </div>
+        <div class="report-score-list">
+          ${signals.map(([name,score])=>`
+            <div class="report-score-item">
+              <div class="report-score-top"><span>${escapeReportHtml(name)}</span><b>${score ?? "N/A"}</b></div>
+              <div class="report-score-bar"><i class="${reportScoreClass(score)}" style="width:${Number.isFinite(Number(score)) ? Math.max(0,Math.min(100,Number(score))) : 0}%"></i></div>
+              <small>${reportScoreLabel(score)}</small>
+            </div>`).join("")}
+        </div>
       </div>
     </div>
 
     <div class="report-grid">
-      <div class="card report-chart-card report-section">
-        <h3>Development Activity — All Time</h3>
-        <div class="chart"><canvas id="reportActivityChart"></canvas></div>
-      </div>
-      <div class="card report-section" style="padding:18px">
-        <h3>Health Signals</h3>
-        <table class="report-table">
-          <tr><th>Signal</th><th>Score</th></tr>
-          <tr><td>Overall health</td><td><strong>${h.overall ?? "N/A"}/100</strong></td></tr>
-          <tr><td>Development activity</td><td>${h.activity ?? "N/A"}/100</td></tr>
-          <tr><td>Maintenance</td><td>${h.maintenance ?? "N/A"}/100</td></tr>
-          <tr><td>Contributor health</td><td>${h.contributorScore ?? "N/A"}/100</td></tr>
-          <tr><td>Issue health</td><td>${h.issueScore ?? "N/A"}/100</td></tr>
-        </table>
-      </div>
-    </div>
-
-    <div class="report-grid">
-      <div class="card report-section" style="padding:18px">
-        <h3>Repository Metrics</h3>
-        <table class="report-table">
-          <tr><th>Metric</th><th>Current value</th></tr>
+      <div class="card report-section report-panel">
+        <div class="report-panel-head">
+          <div><span class="report-section-kicker">REPOSITORY</span><h3>Repository Metrics</h3></div>
+        </div>
+        <table class="report-table report-table-pro">
+          <tr><th>Metric</th><th>Value</th></tr>
           <tr><td>Stars</td><td>${reportMetric(repo.stargazers_count)}</td></tr>
           <tr><td>Forks</td><td>${reportMetric(repo.forks_count)}</td></tr>
           <tr><td>All-time commits</td><td>${reportMetric(d.commit_total)}</td></tr>
           <tr><td>Open issues</td><td>${reportMetric(issues.open_issues)}</td></tr>
           <tr><td>Closed issues</td><td>${reportMetric(issues.closed_issues)}</td></tr>
           <tr><td>Pull requests</td><td>${reportMetric(issues.pull_requests)}</td></tr>
-          <tr><td>Last updated</td><td>${repo.updated_at ? escapeReportHtml(new Date(repo.updated_at).toLocaleString()) : "N/A"}</td></tr>
+          <tr><td>Watchers</td><td>${reportMetric(repo.watchers_count)}</td></tr>
         </table>
       </div>
-      <div class="card report-section" style="padding:18px">
-        <h3>Technology Profile</h3>
-        ${langs.length ? `<table class="report-table">${langs.map(x=>`<tr><td>${escapeReportHtml(x.name)}</td><td>${x.percent.toFixed(1)}%</td></tr>`).join("")}</table>` : `<p>No language data available.</p>`}
+
+      <div class="card report-section report-panel">
+        <div class="report-panel-head">
+          <div><span class="report-section-kicker">CODEBASE</span><h3>Technology Profile</h3></div>
+        </div>
+        ${langs.length ? `
+          <div class="report-language-list">
+            ${langs.map((x,i)=>`
+              <div class="report-language">
+                <div><span><i class="report-language-dot dot-${i%6}"></i>${escapeReportHtml(x.name)}</span><b>${x.percent.toFixed(1)}%</b></div>
+                <div class="report-language-bar"><i style="width:${Math.min(100,x.percent)}%"></i></div>
+              </div>`).join("")}
+          </div>
+        ` : `<div class="report-empty">No language data available.</div>`}
       </div>
     </div>
 
-    <div class="card report-section" style="padding:18px">
-      <h3>Top Contributors</h3>
-      ${contributors.length ? `<table class="report-table"><tr><th>Contributor</th><th>Contributions</th><th>Share</th></tr>${contributors.map(x=>`<tr><td>${escapeReportHtml(x.login)}</td><td>${formatNumber(x.contributions)}</td><td>${x.share.toFixed(1)}%</td></tr>`).join("")}</table>` : `<p>No contributor data available.</p>`}
+    <div class="report-grid">
+      <div class="card report-section report-panel">
+        <div class="report-panel-head">
+          <div><span class="report-section-kicker">COLLABORATION</span><h3>Contributor Distribution</h3></div>
+          <span>${formatNumber(Array.isArray(d.contributors) ? d.contributors.length : 0)} contributors</span>
+        </div>
+        ${contributors.length ? `
+          <div class="report-contributor-highlight">
+            <div class="report-contributor-avatar">${escapeReportHtml(avatarInitial(topContributor.login))}</div>
+            <div><strong>${escapeReportHtml(topContributor.login)}</strong><span>Leading contributor • ${topContributor.share.toFixed(1)}% of loaded contributions</span></div>
+          </div>
+          <table class="report-table report-table-pro">
+            <tr><th>Contributor</th><th>Contributions</th><th>Share</th></tr>
+            ${contributors.map(x=>`<tr><td>${escapeReportHtml(x.login)}</td><td>${formatNumber(x.contributions)}</td><td>${x.share.toFixed(1)}%</td></tr>`).join("")}
+          </table>
+        ` : `<div class="report-empty">No contributor data available.</div>`}
+      </div>
+
+      <div class="card report-section report-panel">
+        <div class="report-panel-head">
+          <div><span class="report-section-kicker">MAINTENANCE</span><h3>Issues & Pull Requests</h3></div>
+        </div>
+        <div class="report-maintenance-grid">
+          <div><strong>${reportMetric(issues.open_issues)}</strong><span>Open issues</span></div>
+          <div><strong>${reportMetric(issues.closed_issues)}</strong><span>Closed issues</span></div>
+          <div><strong>${reportMetric(issues.pull_requests)}</strong><span>Pull requests</span></div>
+          <div><strong>${closureRate == null ? "N/A" : closureRate.toFixed(1)+"%"}</strong><span>Closure rate</span></div>
+        </div>
+        <div class="report-observation">
+          <b>Maintenance signal</b>
+          <span>${escapeReportHtml(fallback.maintenance)}</span>
+        </div>
+      </div>
     </div>
 
-    <div class="card report-section report-ai" style="padding:20px">
-      <h3>✦ RepoIntel AI — Detailed Interpretation</h3>
-      ${aiSections}
+    ${metadataRows.length ? `
+    <div class="card report-section report-panel">
+      <div class="report-panel-head">
+        <div><span class="report-section-kicker">METADATA</span><h3>Repository Profile</h3></div>
+      </div>
+      <div class="report-metadata-grid">
+        ${metadataRows.map(([k,v])=>`<div><span>${escapeReportHtml(k)}</span><strong>${escapeReportHtml(v)}</strong></div>`).join("")}
+      </div>
+    </div>` : ""}
+
+    <div class="card report-section report-panel report-recommendations">
+      <div class="report-panel-head">
+        <div><span class="report-section-kicker">ACTION PLAN</span><h3>Recommended Next Steps</h3></div>
+        <span>Prioritized from current signals</span>
+      </div>
+      <ol>${recommendations.map(x=>`<li>${escapeReportHtml(x)}</li>`).join("")}</ol>
+    </div>
+
+    <div class="card report-section report-ai report-panel">
+      <div class="report-panel-head">
+        <div><span class="report-section-kicker">INTELLIGENCE</span><h3>✦ RepoIntel AI — Detailed Interpretation</h3></div>
+        <span>${aiText ? "AI generated" : "Data-backed fallback"}</span>
+      </div>
+      <div class="report-ai-body">${aiSections}</div>
     </div>
   `;
 
   requestAnimationFrame(() => {
     renderCommitChart("reportActivityChart", activity);
   });
-  if(status) status.textContent = aiText
-    ? "AI report generated from live repository data."
-    : "Data-backed report generated. Generate AI Report for the full narrative.";
+
+  if(status){
+    status.textContent = aiText
+      ? "AI-enhanced report generated from live repository data."
+      : "Detailed data-backed report generated. Use Generate AI Report for deeper interpretation.";
+  }
 }
 
 async function generateDetailedReport(){
@@ -2040,8 +2273,6 @@ async function generateDetailedReport(){
   if(status) status.textContent = "RepoIntel AI is drafting the detailed report…";
 
   try{
-    // Dedicated report endpoint: same live repository context, but with the
-    // report-specific structure and longer-form instructions.
     const r = await backendFetch("/api/ai/report", {
       method:"POST",
       headers:{"Content-Type":"application/json"},
@@ -2049,7 +2280,6 @@ async function generateDetailedReport(){
     });
     renderDetailedReport(r.answer || "");
   }catch(e){
-    // The report remains useful even if the AI call is temporarily unavailable.
     if(status) status.textContent = "AI unavailable — showing the complete data-backed report.";
     renderDetailedReport("");
   }
