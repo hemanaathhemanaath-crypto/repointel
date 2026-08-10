@@ -26,7 +26,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # For college/demo use. Restrict this in production.
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET"],
     allow_headers=["*"],
 )
 
@@ -158,47 +158,11 @@ async def get_contributors(owner: str, repo: str) -> list:
     return result
 
 
-async def get_all_time_commit_activity(owner: str, repo: str) -> tuple[list, int]:
-    """Fetch all commits and aggregate them by month for an all-time activity chart."""
-    buckets = {}
-    total = 0
-
-    for page in range(1, 1001):
-        batch = await github_get(
-            f"/repos/{owner}/{repo}/commits",
-            {"per_page": 100, "page": page},
-        )
-        if not isinstance(batch, list) or not batch:
-            break
-
-        total += len(batch)
-        for commit in batch:
-            commit_data = commit.get("commit") or {}
-            author_data = commit_data.get("author") or {}
-            date_value = author_data.get("date") or (commit_data.get("committer") or {}).get("date")
-            if not date_value:
-                continue
-            try:
-                dt = time.strptime(date_value[:10], "%Y-%m-%d")
-                key = time.strftime("%Y-%m", dt)
-                label = time.strftime("%b %Y", dt)
-            except (ValueError, TypeError):
-                continue
-            if key not in buckets:
-                buckets[key] = {"label": label, "count": 0}
-            buckets[key]["count"] += 1
-
-        if len(batch) < 100:
-            break
-
-    activity = [buckets[key] for key in sorted(buckets)]
-    return activity, total
-
-
-async def get_recent_commit_activity(owner: str, repo: str) -> list:
-    """Keep a bounded recent series for health scoring."""
+async def get_commit_activity(owner: str, repo: str) -> list:
     for _ in range(3):
-        response = await client.get(f"/repos/{owner}/{repo}/stats/commit_activity")
+        response = await client.get(
+            f"/repos/{owner}/{repo}/stats/commit_activity"
+        )
         if response.status_code == 202:
             await __import__("asyncio").sleep(1.2)
             continue
@@ -341,171 +305,13 @@ async def github_profile_repos(username: str):
         }
 
 
-# -------------------- RepoIntel AI --------------------
-
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
-GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
-GROQ_API = "https://api.groq.com/openai/v1/chat/completions"
-
-
-async def groq_chat(system_prompt: str, user_prompt: str) -> str:
-    if not GROQ_API_KEY:
-        raise HTTPException(
-            status_code=503,
-            detail="AI is not configured. Add GROQ_API_KEY to Render Environment Variables."
-        )
-
-    headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "model": GROQ_MODEL,
-        "temperature": 0.2,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-    }
-
-    async with httpx.AsyncClient(timeout=60) as ai_client:
-        response = await ai_client.post(GROQ_API, headers=headers, json=payload)
-
-    if response.status_code >= 400:
-        try:
-            detail = response.json().get("error", {}).get("message", "Groq request failed.")
-        except Exception:
-            detail = "Groq request failed."
-        raise HTTPException(status_code=502, detail=detail)
-
-    data = response.json()
-    try:
-        return data["choices"][0]["message"]["content"].strip()
-    except (KeyError, IndexError, TypeError):
-        raise HTTPException(status_code=502, detail="AI returned an invalid response.")
-
-
-async def build_repo_context(owner: str, repo: str) -> dict:
-    """Fetch the same repository facts RepoIntel already uses, so the AI is repo-specific."""
-    repository = await github_get(f"/repos/{owner}/{repo}")
-    contributors = await get_contributors(owner, repo)
-    languages = await github_get(f"/repos/{owner}/{repo}/languages")
-    activity, commit_total = await get_all_time_commit_activity(owner, repo)
-    recent_activity = await get_recent_commit_activity(owner, repo)
-    issues = await get_issue_counts(owner, repo)
-    health_score = score_health(repository, contributors, issues, recent_activity)
-
-    return {
-        "repository": repository,
-        "languages": languages,
-        "contributors": [
-            {
-                "login": c.get("login"),
-                "contributions": c.get("contributions", 0),
-            }
-            for c in contributors[:20]
-        ],
-        "commit_activity": activity,
-        "commit_total": commit_total,
-        "issues": issues,
-        "health": health_score,
-    }
-
-
-@app.get("/api/health")
-async def health():
-    return {
-        "ok": True,
-        "github_authenticated": bool(GITHUB_TOKEN),
-        "ai_configured": bool(GROQ_API_KEY),
-        "ai_model": GROQ_MODEL if GROQ_API_KEY else None,
-    }
-
-
-@app.post("/api/ai/insights")
-async def ai_insights(payload: dict):
-    owner = str(payload.get("owner", "")).strip()
-    repo = str(payload.get("repo", "")).strip()
-
-    if owner and repo:
-        context = await build_repo_context(owner, repo)
-    else:
-        # Accept the explicit analysis wrapper used by the current frontend.
-        # Also accept the raw /api/analyze response for backward compatibility
-        # with older local HTML files that may still be open in a browser.
-        analysis = payload.get("analysis")
-        if isinstance(analysis, dict):
-            context = analysis
-        elif isinstance(payload.get("repo"), dict):
-            context = payload
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail="Repository analysis context is required."
-            )
-
-    system = """You are RepoIntel AI, a software repository analyst.
-You only discuss the repository data supplied in the prompt.
-Do not invent files, bugs, contributors, technologies, or metrics.
-Give concise, actionable engineering insights suitable for a dashboard.
-Return plain text with clear sections."""
-    user = f"""Analyze this repository for RepoIntel.
-
-Repository data:
-{context}
-
-Produce:
-1. Overall assessment
-2. Strengths
-3. Risks / weaknesses
-4. Maintenance concerns
-5. Three practical recommendations
-6. A short priority statement"""
-
-    answer = await groq_chat(system, user)
-    return {"ok": True, "answer": answer, "model": GROQ_MODEL}
-
-
-@app.post("/api/ai/ask")
-async def ai_ask(payload: dict):
-    question = str(
-        payload.get("question")
-        or payload.get("message")
-        or payload.get("prompt")
-        or ""
-    ).strip()
-
-    if not question:
-        raise HTTPException(status_code=400, detail="question is required.")
-
-    owner = str(payload.get("owner", "")).strip()
-    repo = str(payload.get("repo", "")).strip()
-
-    if owner and repo:
-        context = await build_repo_context(owner, repo)
-    else:
-        context = payload.get("analysis") or payload.get("context") or {}
-
-    system = """You are RepoIntel AI, a private assistant inside the RepoIntel website.
-You answer questions ONLY about the repository context supplied by RepoIntel.
-Never claim to browse the web or access information outside that context.
-If the context does not contain enough information, say so clearly.
-Be concise and useful to a software developer."""
-    user = f"""Repository context:
-{context}
-
-User question:
-{question}
-
-Answer specifically using the repository context above."""
-
-    answer = await groq_chat(system, user)
-    return {"ok": True, "answer": answer, "model": GROQ_MODEL}
-
-
 @app.get("/")
 async def root():
     return {"service": "RepoIntel API", "status": "online"}
+
+@app.get("/api/health")
+async def health():
+    return {"ok": True, "github_authenticated": bool(GITHUB_TOKEN)}
 
 
 @app.get("/api/profile/{owner}/repos")
@@ -523,10 +329,10 @@ async def analyze(owner: str, repo: str):
     repository = await github_get(f"/repos/{owner}/{repo}")
     contributors = await get_contributors(owner, repo)
     languages = await github_get(f"/repos/{owner}/{repo}/languages")
-    activity, commit_total = await get_all_time_commit_activity(owner, repo)
-    recent_activity = await get_recent_commit_activity(owner, repo)
+    activity = await get_commit_activity(owner, repo)
     issues = await get_issue_counts(owner, repo)
-    health_score = score_health(repository, contributors, issues, recent_activity)
+    commit_total = await get_commit_total(activity)
+    health_score = score_health(repository, contributors, issues, activity)
 
     return {
         "repo": repository,
