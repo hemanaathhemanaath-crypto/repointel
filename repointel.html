@@ -955,6 +955,19 @@ body.dark-theme .ai-ask input{color:#f0f6fc !important}
 .report-observation{margin:14px 16px;padding:11px 12px;border-left:3px solid #2da44e;border-radius:7px;background:#f5fbf6}.report-observation b{display:block;font-size:9px;color:#1f883d;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em}.report-observation span{font-size:10px;line-height:1.6;color:#656d76}
 .report-metadata-grid{display:grid;grid-template-columns:repeat(4,1fr)}.report-metadata-grid div{padding:13px 16px;border-right:1px solid #e8ebf0;border-bottom:1px solid #e8ebf0}.report-metadata-grid div:nth-child(4n){border-right:0}.report-metadata-grid div:nth-last-child(-n+4){border-bottom:0}.report-metadata-grid span{display:block;font-size:8px;color:#8b949e;text-transform:uppercase;letter-spacing:.06em}.report-metadata-grid strong{display:block;font-size:10px;color:#1f2328;margin-top:4px;word-break:break-word}
 .report-recommendations ol{margin:0;padding:14px 22px 17px 38px}.report-recommendations li{font-size:10px;line-height:1.7;color:#4b5563;padding:4px 0}.report-recommendations li::marker{color:#2da44e;font-weight:800}
+
+.report-ai-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:14px}
+.report-ai-detail-grid section{padding:16px 18px;border:1px solid #dfe7e2;border-radius:10px;background:rgba(255,255,255,.72)}
+.report-ai-detail-grid h4,.report-ai-conclusion h4{margin:0 0 9px;color:#17232a;font-size:13px;letter-spacing:.07em}
+.report-ai-detail-grid p,.report-ai-conclusion p{margin:0;color:#4b5a63;font-size:12px;line-height:1.8}
+.report-ai-conclusion{margin-top:18px;padding:17px 18px;border-left:4px solid #2da44e;border-radius:8px;background:#f5fbf6}
+.report-ai-note{margin-top:14px;padding:12px 14px;border-radius:8px;background:#f7faf8;color:#65747c;font-size:11px;line-height:1.6}
+body.dark-theme .report-ai-detail-grid section{background:#161b22;border-color:#30363d}
+body.dark-theme .report-ai-detail-grid h4,body.dark-theme .report-ai-conclusion h4{color:#f0f6fc}
+body.dark-theme .report-ai-detail-grid p,body.dark-theme .report-ai-conclusion p{color:#b7c3cc}
+body.dark-theme .report-ai-conclusion{background:#122019}
+body.dark-theme .report-ai-note{background:#161b22;color:#8b949e}
+@media(max-width:800px){.report-ai-detail-grid{grid-template-columns:1fr}}
 .report-ai-body{padding:4px 18px 20px}.report-ai-body h4{font-size:11px;margin:17px 0 7px;color:#1f2328;letter-spacing:.04em}.report-ai-body p,.report-ai-body li{font-size:10.5px;line-height:1.8;color:#4b5563}.report-ai-body ul{margin:5px 0 12px;padding-left:20px}
 .report-ai-summary{display:flex;align-items:center;gap:10px;margin:9px 0 2px;padding:10px 11px;background:#f5fbf6;border:1px solid #dcefd2;border-radius:8px}.report-ai-icon{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:#2da44e;color:#fff;font-weight:800}.report-ai-summary strong{display:block;font-size:10px;color:#1f2328}.report-ai-summary span{display:block;font-size:8px;color:#8b949e;margin-top:2px}
 body.dark-theme .report-cover-pro{background:radial-gradient(circle at 92% 12%,rgba(46,164,79,.17),transparent 28%),linear-gradient(135deg,#101b14 0%,#161b22 60%,#101713 100%)!important;border-color:#2ea043!important}
@@ -1918,12 +1931,23 @@ function getTopContributors(){
 
 function fallbackReportNarrative(){
   const d = window.lastAnalysisData;
-  if(!d) return "";
+  if(!d) return {};
   const repo = d.repo || {};
   const h = d.health || {};
   const issues = d.issues || {};
   const activity = Array.isArray(d.commit_activity) ? d.commit_activity : [];
+  const contributors = Array.isArray(d.contributors) ? d.contributors : [];
   const chartCommits = activity.reduce((s,x)=>s+(Number(x.count)||0),0);
+  const activePeriods = activity.filter(x=>(Number(x.count)||0)>0).length;
+  const inactivePeriods = Math.max(0, activity.length-activePeriods);
+  const peak = activity.length ? activity.reduce((a,b)=>(Number(b.count)||0)>(Number(a.count)||0)?b:a) : null;
+  const avg = activity.length ? chartCommits/activity.length : 0;
+  const totalContrib = contributors.reduce((s,x)=>s+(Number(x.contributions)||0),0);
+  const top = contributors.slice().sort((a,b)=>(Number(b.contributions)||0)-(Number(a.contributions)||0))[0];
+  const topShare = top && totalContrib ? ((Number(top.contributions)||0)/totalContrib*100) : 0;
+  const closed = Number(issues.closed_issues)||0;
+  const open = Number(issues.open_issues)||0;
+  const prs = Number(issues.pull_requests)||0;
 
   const signals = [
     ["Development activity", Number(h.activity)],
@@ -1931,28 +1955,35 @@ function fallbackReportNarrative(){
     ["Contributor health", Number(h.contributorScore)],
     ["Issue health", Number(h.issueScore)]
   ].filter(x => Number.isFinite(x[1])).sort((a,b)=>a[1]-b[1]);
-
   const weakest = signals[0] || ["Development activity", null];
+  const strongest = signals.length ? signals[signals.length-1] : ["Issue health", null];
 
   return {
     summary:
-      `${repo.full_name || repo.name || "This repository"} has an overall RepoIntel health score of ${h.overall ?? "N/A"}/100. ` +
-      `GitHub reports ${d.commit_total ?? "N/A"} all-time commits, while the activity series represents ${chartCommits} commits across ${activity.length} loaded periods. ` +
-      `The weakest calculated signal is ${weakest[0]}${weakest[1] != null ? ` at ${weakest[1]}/100` : ""}.`,
+      `${repo.full_name || repo.name || "This repository"} currently has a RepoIntel health score of ${h.overall ?? "N/A"}/100. ` +
+      `GitHub reports ${d.commit_total ?? "N/A"} all-time commits, ${Array.isArray(d.contributors) ? d.contributors.length : 0} public contributor(s), and ${open} open issue(s). ` +
+      `The strongest calculated signal is ${strongest[0]} at ${strongest[1] ?? "N/A"}/100, while ${weakest[0]} is the main area requiring attention at ${weakest[1] ?? "N/A"}/100.`,
     activity:
       activity.length
-        ? `The all-time activity series contains ${activity.length} loaded periods and ${chartCommits} represented commits. ` +
-          `The chart should be read as the repository's returned activity history rather than as a replacement for the paginated GitHub all-time commit total.`
-        : `No commit activity series was returned by the backend, so development trends cannot be evaluated from the current dataset.`,
+        ? `The all-time activity dataset contains ${activity.length} loaded period(s) and ${chartCommits} represented commit(s). ` +
+          `${activePeriods} period(s) contain activity and ${inactivePeriods} period(s) contain no recorded commits. ` +
+          `The average across loaded periods is ${avg.toFixed(1)} commit(s) per period` +
+          `${peak ? `, with the peak occurring in ${peak.period || peak.date || "the highest recorded period"} at ${Number(peak.count)||0} commit(s)` : ""}. ` +
+          `Because the repository's all-time commit total and the charted activity series come from different GitHub API views, the chart is best interpreted as a distribution of returned activity rather than a replacement for the all-time total.`
+        : `No commit activity series was returned by the backend, so a development trend cannot be established from the current dataset.`,
     collaboration:
-      `${Array.isArray(d.contributors) ? d.contributors.length : 0} public contributors are represented in the loaded data. ` +
-      `Contributor health is ${h.contributorScore ?? "N/A"}/100.`,
+      `${contributors.length} public contributor(s) are represented in the loaded dataset. ` +
+      (top ? `${top.login || top.name || "The leading contributor"} accounts for ${topShare.toFixed(1)}% of the loaded contribution count (${Number(top.contributions)||0} contribution(s) out of ${totalContrib}). ` : "No contributor-level contribution counts were returned. ") +
+      `The calculated contributor-health signal is ${h.contributorScore ?? "N/A"}/100, so the report should distinguish repository size from collaboration breadth rather than treating a single contributor as an error.`,
     maintenance:
-      `The current GitHub totals contain ${issues.open_issues ?? 0} open issues, ${issues.closed_issues ?? 0} closed issues, and ${issues.pull_requests ?? 0} pull requests. ` +
-      `Issue health is ${h.issueScore ?? "N/A"}/100 and maintenance is ${h.maintenance ?? "N/A"}/100.`,
+      `The current GitHub totals contain ${open} open issue(s), ${closed} closed issue(s), and ${prs} pull request(s). ` +
+      `Issue health is ${h.issueScore ?? "N/A"}/100 and maintenance is ${h.maintenance ?? "N/A"}/100. ` +
+      `${open === 0 ? "No open issue backlog is currently visible in the returned data." : `There are ${open} open issue(s) that should be reviewed and prioritized.`} ` +
+      `${closed === 0 ? "No closed-issue history was returned, so an issue-resolution trend cannot be established." : `The returned data includes ${closed} closed issue(s), providing some evidence of issue resolution activity.`}`,
     conclusion:
-      `RepoIntel currently rates the repository at ${h.overall ?? "N/A"}/100. ` +
-      `The first improvement priority should be ${weakest[0]}, while preserving the areas that already score strongly.`
+      `Overall, RepoIntel rates ${repo.full_name || repo.name || "the repository"} at ${h.overall ?? "N/A"}/100. ` +
+      `The data points to ${weakest[0].toLowerCase()} as the first improvement area, while ${strongest[0].toLowerCase()} is currently a relative strength. ` +
+      `The most useful next step is to improve the weakest signal without creating artificial activity: continue meaningful development, document ownership, and use issues or pull requests when they add real project value.`
   };
 }
 
@@ -2095,16 +2126,14 @@ function renderDetailedReport(aiText){
           <span>Generated locally from the live repository dataset</span>
         </div>
       </div>
-      <h4>EXECUTIVE INTERPRETATION</h4>
-      <p>${escapeReportHtml(fallback.summary)}</p>
-      <h4>DEVELOPMENT ACTIVITY</h4>
-      <p>${escapeReportHtml(fallback.activity)}</p>
-      <h4>COLLABORATION AND CONTRIBUTORS</h4>
-      <p>${escapeReportHtml(fallback.collaboration)}</p>
-      <h4>ISSUES AND MAINTENANCE</h4>
-      <p>${escapeReportHtml(fallback.maintenance)}</p>
-      <h4>CONCLUSION</h4>
-      <p>${escapeReportHtml(fallback.conclusion)}</p>
+      <div class="report-ai-detail-grid">
+        <section><h4>EXECUTIVE INTERPRETATION</h4><p>${escapeReportHtml(fallback.summary)}</p></section>
+        <section><h4>DEVELOPMENT ACTIVITY</h4><p>${escapeReportHtml(fallback.activity)}</p></section>
+        <section><h4>COLLABORATION & CONTRIBUTION PATTERN</h4><p>${escapeReportHtml(fallback.collaboration)}</p></section>
+        <section><h4>ISSUES, PULL REQUESTS & MAINTENANCE</h4><p>${escapeReportHtml(fallback.maintenance)}</p></section>
+      </div>
+      <section class="report-ai-conclusion"><h4>CONCLUSION & PRIORITY</h4><p>${escapeReportHtml(fallback.conclusion)}</p></section>
+      <div class="report-ai-note"><strong>Interpretation rule:</strong> This fallback is generated from the repository data already loaded in RepoIntel. It does not invent missing GitHub activity or replace live GitHub totals with estimates.</div>
     `;
 
   container.className = "report-shell";
