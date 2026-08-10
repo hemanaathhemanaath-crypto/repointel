@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RepoIntel — GitHub Repository Intelligence</title>
+<title>RepoIntel — GitHub Repository Intelligence • Groq AI</title>
 <style>
 :root{
   --bg:#f5f7fa;
@@ -1037,6 +1037,7 @@ body.dark-theme .report-contributor-avatar{background:#1f3a27;color:#7ee787}body
       <div class="hero">
         <div>
           <div id="backend-status" style="font-size:12px;margin:8px 0;color:#6b7280">Checking RepoIntel server…</div>
+          <div id="repointel-build" style="font-size:9px;color:#71806E;margin-bottom:4px">RepoIntel Groq AI build 2026.08.11-final</div>
     <div class="subtitle">GitHub Repository Intelligence Platform</div>
           <h1>Repository Overview</h1>
           <div class="subtitle">Analyze development health, activity and project behavior.</div><div class="repo-identity"><i class="repo-mark"></i><span>GitHub repository intelligence • <strong>live analysis</strong></span></div>
@@ -1274,7 +1275,7 @@ function parseGitHubUrl(value){
 
 const BACKEND_URL = "https://repointel-pg48.onrender.com";
 
-async function backendFetch(path, options = {}){
+window.backendFetch = async function backendFetch(path, options = {}){
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 90000);
 
@@ -1296,10 +1297,8 @@ async function backendFetch(path, options = {}){
     try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
 
     if(!response.ok){
-      throw new Error(
-        data.detail ||
-        `RepoIntel backend returned HTTP ${response.status}.`
-      );
+      const detail = data.detail || data.message || (text && !text.trim().startsWith("<") ? text.trim().slice(0,500) : "");
+      throw new Error(detail || `RepoIntel backend returned HTTP ${response.status}.`);
     }
     return data;
   } catch (error) {
@@ -2308,7 +2307,7 @@ function renderDetailedReport(aiText){
   }
 }
 
-async async function generateDetailedReport(){
+window.generateDetailedReport = async function generateDetailedReport(){
   const d = window.lastAnalysisData;
   const status = document.getElementById("reportStatus");
   const button = document.querySelector('[onclick="generateDetailedReport()"]');
@@ -2339,7 +2338,7 @@ async async function generateDetailedReport(){
     const r = await backendFetch("/api/ai/report", {
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({owner, repo})
+      body:JSON.stringify({owner, repo, analysis: d})
     });
 
     const report = String(r.report || "").trim();
