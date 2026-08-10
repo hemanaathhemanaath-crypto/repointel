@@ -158,11 +158,47 @@ async def get_contributors(owner: str, repo: str) -> list:
     return result
 
 
-async def get_commit_activity(owner: str, repo: str) -> list:
-    for _ in range(3):
-        response = await client.get(
-            f"/repos/{owner}/{repo}/stats/commit_activity"
+async def get_all_time_commit_activity(owner: str, repo: str) -> tuple[list, int]:
+    """Fetch all commits and aggregate them by month for an all-time activity chart."""
+    buckets = {}
+    total = 0
+
+    for page in range(1, 1001):
+        batch = await github_get(
+            f"/repos/{owner}/{repo}/commits",
+            {"per_page": 100, "page": page},
         )
+        if not isinstance(batch, list) or not batch:
+            break
+
+        total += len(batch)
+        for commit in batch:
+            commit_data = commit.get("commit") or {}
+            author_data = commit_data.get("author") or {}
+            date_value = author_data.get("date") or (commit_data.get("committer") or {}).get("date")
+            if not date_value:
+                continue
+            try:
+                dt = time.strptime(date_value[:10], "%Y-%m-%d")
+                key = time.strftime("%Y-%m", dt)
+                label = time.strftime("%b %Y", dt)
+            except (ValueError, TypeError):
+                continue
+            if key not in buckets:
+                buckets[key] = {"label": label, "count": 0}
+            buckets[key]["count"] += 1
+
+        if len(batch) < 100:
+            break
+
+    activity = [buckets[key] for key in sorted(buckets)]
+    return activity, total
+
+
+async def get_recent_commit_activity(owner: str, repo: str) -> list:
+    """Keep a bounded recent series for health scoring."""
+    for _ in range(3):
+        response = await client.get(f"/repos/{owner}/{repo}/stats/commit_activity")
         if response.status_code == 202:
             await __import__("asyncio").sleep(1.2)
             continue
@@ -354,9 +390,10 @@ async def build_repo_context(owner: str, repo: str) -> dict:
     repository = await github_get(f"/repos/{owner}/{repo}")
     contributors = await get_contributors(owner, repo)
     languages = await github_get(f"/repos/{owner}/{repo}/languages")
-    activity = await get_commit_activity(owner, repo)
+    activity, commit_total = await get_all_time_commit_activity(owner, repo)
+    recent_activity = await get_recent_commit_activity(owner, repo)
     issues = await get_issue_counts(owner, repo)
-    health_score = score_health(repository, contributors, issues, activity)
+    health_score = score_health(repository, contributors, issues, recent_activity)
 
     return {
         "repository": repository,
@@ -369,6 +406,7 @@ async def build_repo_context(owner: str, repo: str) -> dict:
             for c in contributors[:20]
         ],
         "commit_activity": activity,
+        "commit_total": commit_total,
         "issues": issues,
         "health": health_score,
     }
@@ -485,10 +523,10 @@ async def analyze(owner: str, repo: str):
     repository = await github_get(f"/repos/{owner}/{repo}")
     contributors = await get_contributors(owner, repo)
     languages = await github_get(f"/repos/{owner}/{repo}/languages")
-    activity = await get_commit_activity(owner, repo)
+    activity, commit_total = await get_all_time_commit_activity(owner, repo)
+    recent_activity = await get_recent_commit_activity(owner, repo)
     issues = await get_issue_counts(owner, repo)
-    commit_total = await get_commit_total(activity)
-    health_score = score_health(repository, contributors, issues, activity)
+    health_score = score_health(repository, contributors, issues, recent_activity)
 
     return {
         "repo": repository,
