@@ -1,0 +1,3310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RepoIntel — GitHub Repository Intelligence</title>
+<style>
+:root{
+  --bg:#f5f7fa;
+  --panel:#ffffff;
+  --sidebar:#172217;
+  --sidebar-2:#213020;
+  --text:#172033;
+  --muted:#71806E;
+  --line:#e8ebf0;
+  --accent:#6BAF4A;
+  --accent-soft:#EAF5E4;
+  --green:#25a86a;
+  --green-soft:#EAF6E5;
+  --orange:#e79b35;
+  --orange-soft:#fff5e6;
+  --red:#e85b5b;
+  --blue:#3f83f8;
+  --shadow:0 2px 12px rgba(25,35,55,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+button,input{font:inherit}
+.app{display:flex;min-height:100vh}
+.sidebar{width:238px;background:var(--sidebar);color:#CBD8C7;position:fixed;inset:0 auto 0 0;display:flex;flex-direction:column;z-index:10}
+.brand{height:72px;display:flex;align-items:center;padding:0 22px;border-bottom:1px solid rgba(255,255,255,.06);gap:11px}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--accent);display:grid;place-items:center;color:white;font-weight:800;box-shadow:0 5px 18px rgba(108,92,231,.35)}
+.brand strong{font-size:18px;color:white;letter-spacing:-.3px}
+.brand small{display:block;font-size:9px;color:#818da1;letter-spacing:1.1px;margin-top:2px}
+.nav{padding:18px 12px;flex:1}
+.nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:#71806E;padding:0 12px 9px}
+.nav a{height:42px;display:flex;align-items:center;gap:12px;border-radius:8px;padding:0 12px;margin:3px 0;color:#AFC0AA;text-decoration:none;font-size:13px}
+.nav a:hover,.nav a.active{background:var(--sidebar-2);color:white}
+.nav a.active{box-shadow:inset 3px 0 0 var(--accent)}
+.icon{width:18px;text-align:center;font-size:15px;opacity:.9}
+.sidebar-bottom{padding:14px;border-top:1px solid rgba(255,255,255,.06)}
+.profile{display:flex;align-items:center;gap:10px;padding:9px}
+.avatar{width:32px;height:32px;border-radius:50%;background:#303a4c;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700}
+.profile span{font-size:12px;color:#e0e5ed}
+.profile small{display:block;color:#71806E;font-size:10px;margin-top:2px}
+.main{margin-left:238px;width:calc(100% - 238px)}
+.topbar{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:sticky;top:0;z-index:5}
+.crumb{font-size:12px;color:var(--muted)}
+.crumb strong{color:var(--text)}
+.top-actions{display:flex;align-items:center;gap:12px}
+.icon-btn{width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:#71806E}
+.content{padding:28px 30px 50px;max-width:1500px;margin:auto}
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:24px}
+h1{font-size:25px;margin:4px 0 7px;letter-spacing:-.6px}
+.subtitle{font-size:13px;color:var(--muted)}
+.analyze{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;gap:8px;box-shadow:var(--shadow)}
+.analyze input{width:320px;border:0;outline:0;color:#4f596b;padding:7px 9px;font-size:12px;background:transparent}
+.analyze-wrap{display:flex;flex-direction:column;align-items:flex-end}
+.url-error{display:none;color:#d9534f;font-size:10px;margin-top:7px;max-width:480px;text-align:right}
+.repo-picker{display:none;margin-top:10px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:10px;width:min(480px,100%)}
+.repo-picker-title{font-size:11px;font-weight:700;margin:0 0 8px;color:var(--text)}
+.repo-option{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:1px solid var(--line);background:#fff;border-radius:7px;padding:9px 10px;margin:5px 0;text-align:left;cursor:pointer}
+.repo-option:hover{background:#f7fbf5;border-color:#b9d9aa}
+.repo-option strong{font-size:11px;color:var(--text)}
+.repo-option small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+.repo-option .arrow{color:var(--accent);font-weight:700}
+
+.analyze.has-error{border-color:#e85b5b;box-shadow:0 0 0 2px rgba(232,91,91,.08)}
+.analyze.has-error input{color:#b83b3b}
+
+.primary{border:0;background:var(--accent);color:#fff;padding:9px 15px;border-radius:7px;font-weight:650;font-size:12px;cursor:pointer}
+.primary:hover{filter:brightness(.96)}\n.primary:disabled{opacity:.65;cursor:wait}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(5,1fr);margin-bottom:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow)}
+.kpi{padding:17px 18px}
+.kpi-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:11px}
+.kpi-icon{width:30px;height:30px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:13px}
+.kpi-value{font-size:22px;font-weight:750;margin:10px 0 3px;letter-spacing:-.4px}
+.kpi-foot{font-size:10px;color:var(--muted)}
+.up{color:var(--green)}
+.layout{grid-template-columns:minmax(0,2fr) minmax(270px,1fr)}
+.card-head{padding:17px 18px 12px;display:flex;justify-content:space-between;align-items:center}
+.card-head h2{font-size:13px;margin:0;font-weight:700}
+.card-head span{font-size:10px;color:var(--muted)}
+.chart-card{min-height:290px}
+.chart{padding:8px 18px 18px;height:220px;position:relative}
+.chart{height:220px}.chart canvas{width:100%;height:100%;display:block}
+.axis{font-size:9px;fill:#a0a8b5}
+.health-card{min-height:290px}
+.health-body{padding:10px 20px 20px;display:flex;flex-direction:column;align-items:center}
+.gauge{width:150px;height:150px;position:relative;margin:4px 0 12px}
+.gauge svg{width:100%;height:100%;transform:rotate(-90deg)}
+.gauge-bg{fill:none;stroke:#edf0f5;stroke-width:13}
+.gauge-value{fill:none;stroke:var(--accent);stroke-width:13;stroke-linecap:round;stroke-dasharray:339;stroke-dashoffset:44}
+.gauge-center{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.gauge-center strong{font-size:31px;display:block}
+.gauge-center small{font-size:9px;color:var(--muted)}
+.good{font-size:11px;color:var(--green);background:var(--green-soft);padding:6px 11px;border-radius:20px;font-weight:700}.health-warning{color:var(--orange)!important;background:var(--orange-soft)!important}.health-danger{color:var(--red)!important;background:#fff0f0!important}
+.metrics{width:100%;margin-top:15px}
+.metric{margin:10px 0}
+.metric-row{display:flex;justify-content:space-between;font-size:10px;margin-bottom:5px;color:#657084}
+.bar{height:6px;border-radius:5px;background:#edf0f4;overflow:hidden}
+.fill{height:100%;border-radius:5px;background:var(--accent)}
+.bottom{grid-template-columns:1.2fr 1fr 1fr;margin-top:16px}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:11px 16px;text-align:left;border-top:1px solid var(--line);font-size:10px}
+.table th{color:var(--muted);font-weight:600;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
+.user{display:flex;align-items:center;gap:8px}
+.mini-avatar{width:25px;height:25px;border-radius:50%;background:#dfe3ea;display:grid;place-items:center;font-size:9px;font-weight:700;color:#566073}
+.rank{color:var(--muted);width:20px}
+.issue-row{display:flex;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--line);font-size:11px}
+.badge{padding:4px 7px;border-radius:12px;font-size:9px;font-weight:650}
+.badge.green{background:var(--green-soft);color:var(--green)}
+.badge.orange{background:var(--orange-soft);color:var(--orange)}
+.badge.red{background:#fff0f0;color:var(--red)}
+.lang{padding:8px 16px}
+.lang-row{display:flex;align-items:center;justify-content:space-between;font-size:10px;margin:10px 0}
+.lang-name{display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.lang-percent{color:var(--muted)}
+.insight{margin-top:16px;padding:18px;background:#F7FBF5;border:1px solid #DCEFD2;border-radius:10px}
+.insight-head{display:flex;gap:9px;align-items:center;font-size:12px;font-weight:700}
+.ai{width:27px;height:27px;border-radius:7px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:12px}
+.insight p{font-size:11px;line-height:1.7;color:#667084;margin:12px 0 0}
+.footer-note{font-size:9px;color:#a1a9b6;text-align:right;margin-top:14px}
+.page-view{display:none}.page-view.active{display:block}.view-title{font-size:20px;margin:0 0 6px}.view-subtitle{font-size:12px;color:var(--muted);margin-bottom:20px}.view-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.view-full{grid-column:1/-1}.page-view{width:100%}.stat-big{font-size:28px;font-weight:750;margin-top:8px}.empty-state{padding:36px;text-align:center;color:var(--muted);font-size:12px}.report-actions{display:flex;gap:8px;margin-top:14px}
+.report-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.report-actions{display:flex;gap:8px;flex-wrap:wrap}
+.report-status{font-size:11px;color:var(--muted)}
+.report-cover{padding:24px;background:linear-gradient(135deg,rgba(107,175,74,.12),rgba(107,175,74,.02));border:1px solid var(--line);border-radius:10px}
+.report-cover h2{font-size:22px;margin:0 0 7px}
+.report-cover p{font-size:12px;line-height:1.7;color:var(--muted);margin:0}
+.report-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}
+.report-kpi{padding:15px;border:1px solid var(--line);border-radius:9px;background:var(--card)}
+.report-kpi .label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.report-kpi .value{font-size:23px;font-weight:800;margin-top:6px}
+.report-section{margin-top:16px}
+.report-section h3{font-size:14px;margin:0 0 9px}
+.report-section p,.report-section li{font-size:11px;line-height:1.75;color:var(--text)}
+.report-section ul{margin:7px 0 0;padding-left:20px}
+.report-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:14px}
+.report-chart-card{padding:18px}
+.report-chart-card .chart{height:280px}
+.report-table{width:100%;border-collapse:collapse;font-size:10px}
+.report-table th,.report-table td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left}
+.report-table th{color:var(--muted);font-weight:600}
+.report-ai{white-space:normal}
+.report-ai h4{font-size:13px;margin:17px 0 7px}
+.report-ai p,.report-ai li{font-size:11px;line-height:1.75}
+.report-ai ul{margin:5px 0 10px;padding-left:20px}
+.report-empty{padding:30px;text-align:center;color:var(--muted);font-size:12px}
+@media(max-width:900px){.report-kpis{grid-template-columns:repeat(2,1fr)}.report-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.report-kpis{grid-template-columns:1fr}}
+@media print{
+  .sidebar,.topbar,.footer-note,.report-toolbar,.report-actions{display:none!important}
+  .main{margin:0!important}
+  .page-view[data-page="reports"]{display:block!important}
+  .report-section,.report-cover,.report-kpi,.report-chart-card{break-inside:avoid}
+  body{background:#fff!important}
+}
+.secondary{border:1px solid var(--line);background:#fff;color:var(--text);padding:9px 13px;border-radius:7px;font-size:11px;cursor:pointer}.secondary:hover{border-color:#b9d9aa;background:#f7fbf5}@media(max-width:800px){.view-grid{grid-template-columns:1fr}.view-full{grid-column:auto}}
+
+/* Desktop & laptop-first layout */
+
+/* =========================================================
+   RepoIntel — GitHub-inspired visual system
+   ========================================================= */
+:root{
+  --bg:#f6f8fa;
+  --panel:#ffffff;
+  --sidebar:#0d1117;
+  --sidebar-2:#161b22;
+  --text:#1f2328;
+  --muted:#656d76;
+  --line:#d8dee4;
+  --accent:#2da44e;
+  --accent-strong:#1f883d;
+  --accent-soft:#dafbe1;
+  --green:#2da44e;
+  --green-soft:#dafbe1;
+  --orange:#bf8700;
+  --orange-soft:#fff8c5;
+  --red:#cf222e;
+  --blue:#0969da;
+  --shadow:0 1px 2px rgba(31,35,40,.08),0 4px 14px rgba(31,35,40,.04);
+}
+
+/* Sidebar */
+.sidebar{
+  background:
+    radial-gradient(circle at 20% 8%,rgba(46,164,79,.10),transparent 25%),
+    linear-gradient(180deg,#0d1117 0%,#0d1117 72%,#0b0f14 100%);
+  border-right:1px solid #30363d;
+}
+.brand{
+  height:78px;
+  border-bottom:1px solid #21262d;
+}
+.logo{
+  background:#2da44e;
+  border-radius:8px;
+  box-shadow:0 0 0 1px rgba(46,164,79,.25),0 8px 24px rgba(46,164,79,.18);
+}
+.brand strong{letter-spacing:-.5px}
+.brand small{color:#8b949e}
+.nav-label{color:#7d8590}
+.nav a{
+  color:#8b949e;
+  border:1px solid transparent;
+}
+.nav a:hover{
+  background:#161b22;
+  border-color:#30363d;
+  color:#f0f6fc;
+}
+.nav a.active{
+  background:#1f2d22;
+  color:#f0f6fc;
+  border-color:#2d4933;
+  box-shadow:inset 3px 0 0 #2da44e;
+}
+.nav a.active .icon{color:#3fb950}
+.sidebar-bottom{border-top-color:#21262d}
+.avatar{background:#21262d;color:#c9d1d9}
+
+/* Main GitHub-like top bar */
+.topbar{
+  background:rgba(255,255,255,.96);
+  border-bottom:1px solid #d0d7de;
+  backdrop-filter:blur(8px);
+}
+.crumb{color:#656d76}
+.crumb strong{color:#1f2328}
+.icon-btn{
+  background:#fff;
+  border-color:#d0d7de;
+  color:#57606a;
+}
+.icon-btn:hover{background:#f6f8fa;border-color:#afb8c1}
+
+/* GitHub-like page header */
+.content{max-width:1580px}
+.hero{
+  padding-bottom:23px;
+  border-bottom:1px solid #d8dee4;
+}
+.hero h1{
+  font-weight:650;
+  letter-spacing:-.7px;
+}
+.subtitle{color:#656d76}
+
+/* Repository input */
+.analyze{
+  border-color:#d0d7de;
+  box-shadow:0 1px 2px rgba(31,35,40,.08);
+}
+.analyze:focus-within{
+  border-color:#0969da;
+  box-shadow:0 0 0 3px rgba(9,105,218,.12);
+}
+.analyze input{color:#1f2328}
+.primary{
+  background:#2da44e;
+  border:1px solid rgba(27,31,36,.15);
+  box-shadow:0 1px 0 rgba(31,35,40,.1);
+}
+.primary:hover{background:#1f883d;filter:none}
+
+/* Cards become GitHub "bordered panels" */
+.card{
+  border:1px solid #d0d7de;
+  border-radius:6px;
+  box-shadow:var(--shadow);
+}
+.kpi{
+  position:relative;
+  overflow:hidden;
+}
+.kpi:before{
+  content:"";
+  position:absolute;
+  left:0;top:0;bottom:0;
+  width:3px;
+  background:#2da44e;
+  opacity:.65;
+}
+.kpi-icon{
+  background:#dafbe1;
+  color:#1f883d;
+  border-radius:6px;
+}
+.kpi-value{letter-spacing:-.6px}
+
+/* Add a GitHub-style repository identity strip */
+.repo-identity{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin-top:12px;
+  font-size:11px;
+  color:#656d76;
+}
+.repo-mark{
+  width:7px;height:7px;border-radius:50%;
+  background:#2da44e;
+  box-shadow:0 0 0 3px #dafbe1;
+}
+.repo-identity strong{color:#1f2328}
+
+/* Charts */
+.chart-card,.health-card{overflow:hidden}
+.chart-card .card-head,
+.health-card .card-head{
+  background:#f6f8fa;
+  border-bottom:1px solid #d8dee4;
+}
+.chart-card .card-head h2,
+.health-card .card-head h2{font-size:12px}
+
+/* Health gauge */
+.gauge-value{stroke:#2da44e}
+.good{
+  color:#1a7f37;
+  background:#dafbe1;
+  border:1px solid #aceebb;
+}
+
+/* Tables */
+.table th{
+  color:#656d76;
+  background:#f6f8fa;
+}
+.table td,.table th{border-color:#d8dee4}
+.table tbody tr:hover{background:#f6f8fa}
+.mini-avatar{
+  background:#ddf4ff;
+  color:#0969da;
+}
+
+/* Issue badges */
+.badge.green{background:#dafbe1;color:#1a7f37}
+.badge.orange{background:#fff8c5;color:#9a6700}
+.badge.red{background:#ffebe9;color:#cf222e}
+
+/* Languages */
+.dot{background:#2da44e}
+
+/* AI panel — GitHub Copilot-like visual language, but RepoIntel branding */
+.insight{
+  background:linear-gradient(135deg,#f6fff8 0%,#ffffff 65%);
+  border:1px solid #b7ebc6;
+  position:relative;
+  overflow:hidden;
+}
+.insight:before{
+  content:"";
+  position:absolute;
+  width:160px;height:160px;
+  right:-55px;top:-70px;
+  border:30px solid rgba(46,164,79,.07);
+  border-radius:50%;
+}
+.ai{
+  background:#1f883d;
+  border-radius:6px;
+  box-shadow:0 0 0 4px #dafbe1;
+}
+
+/* Picker */
+.repo-picker{
+  border-color:#d0d7de;
+  box-shadow:0 8px 24px rgba(31,35,40,.12);
+}
+.repo-option{
+  border-color:#d8dee4;
+}
+.repo-option:hover{
+  background:#f6f8fa;
+  border-color:#2da44e;
+}
+.repo-option .arrow{color:#1f883d}
+
+/* Small GitHub-like labels */
+.footer-note{color:#8b949e}
+
+/* Subtle interaction */
+.card,.repo-option,.icon-btn,.nav a,.primary{
+  transition:background .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+.repo-option:hover{transform:translateY(-1px)}
+.primary:active{transform:translateY(1px)}
+
+
+/* Living background — subtle GitHub-green workspace atmosphere */
+body{
+  background:
+    radial-gradient(circle at 82% 8%, rgba(46,164,79,.13), transparent 25%),
+    radial-gradient(circle at 18% 42%, rgba(46,164,79,.07), transparent 28%),
+    linear-gradient(135deg,#eef6ef 0%,#f5f8f5 42%,#e9f3eb 100%);
+  background-attachment:fixed;
+}
+
+.main{
+  background:
+    radial-gradient(circle at 88% 18%, rgba(46,164,79,.06), transparent 24%),
+    transparent;
+}
+
+.content{
+  position:relative;
+}
+
+.content:before{
+  content:"";
+  position:fixed;
+  width:420px;
+  height:420px;
+  right:-180px;
+  bottom:-170px;
+  border-radius:50%;
+  border:70px solid rgba(46,164,79,.045);
+  pointer-events:none;
+  z-index:0;
+}
+
+.content > *{
+  position:relative;
+  z-index:1;
+}
+
+/* Make the top header blend with the living background instead of
+   creating a hard white strip. */
+.topbar{
+  background:rgba(246,248,250,.88);
+}
+
+/* Header area gets a soft green tint */
+.hero{
+  background:linear-gradient(90deg,rgba(218,251,225,.32),rgba(255,255,255,0));
+  border-radius:10px;
+  padding:20px 20px 23px;
+}
+
+/* Cards stay bright for readability, but gain a little depth */
+.card{
+  background:rgba(255,255,255,.94);
+  box-shadow:
+    0 1px 2px rgba(31,35,40,.07),
+    0 10px 30px rgba(46,164,79,.055);
+}
+
+/* Give KPI cards individual green atmosphere */
+.kpi:nth-child(1){background:linear-gradient(145deg,#fff 70%,#effbf1)}
+.kpi:nth-child(2){background:linear-gradient(145deg,#fff 70%,#effbf1)}
+.kpi:nth-child(3){background:linear-gradient(145deg,#fff 70%,#effbf1)}
+.kpi:nth-child(4){background:linear-gradient(145deg,#fff 70%,#effbf1)}
+.kpi:nth-child(5){background:linear-gradient(145deg,#fff 70%,#fff9df)}
+
+/* Activity chart panel */
+.chart-card{
+  background:
+    linear-gradient(180deg,rgba(218,251,225,.22),rgba(255,255,255,.96) 38%);
+}
+
+/* Health panel gets a subtle green glow */
+.health-card{
+  background:
+    radial-gradient(circle at 50% 28%,rgba(46,164,79,.09),transparent 30%),
+    rgba(255,255,255,.96);
+}
+
+/* Give the AI section more visual personality */
+.insight{
+  box-shadow:0 8px 30px rgba(46,164,79,.09);
+}
+
+/* More visible page separation */
+.layout,.bottom{
+  filter:drop-shadow(0 3px 10px rgba(46,164,79,.025));
+}
+
+@media (min-width: 801px){
+  .sidebar{width:260px}
+  .main{margin-left:260px;width:calc(100% - 260px)}
+  .topbar{height:76px;padding:0 38px}
+  .content{
+    padding:34px 38px 60px;
+    max-width:1680px;
+  }
+  .hero{margin-bottom:26px}
+  h1{font-size:28px}
+  .subtitle{font-size:13px}
+  .analyze{min-width:480px}
+  .analyze input{width:365px}
+  .kpis{grid-template-columns:repeat(5,minmax(145px,1fr));gap:18px}
+  .kpi{padding:20px}
+  .kpi-value{font-size:24px}
+  .layout{grid-template-columns:minmax(0,2.15fr) minmax(330px,.85fr);gap:18px}
+  .chart-card,.health-card{min-height:330px}
+  .chart{height:255px}
+  .bottom{grid-template-columns:1.35fr 1fr 1fr;gap:18px}
+  .card-head{padding:19px 20px 14px}
+  .table th,.table td{padding:13px 20px;font-size:11px}
+  .issue-row{padding:14px 20px;font-size:11px}
+  .lang{padding:10px 20px}
+  .insight{padding:20px}
+}
+@media (min-width: 1400px){
+  .content{padding-left:46px;padding-right:46px}
+  .kpis{gap:20px}
+  .layout,.bottom{gap:20px}
+}
+
+@media(max-width:1100px){
+  .kpis{grid-template-columns:repeat(3,1fr)}
+  .bottom{grid-template-columns:1fr 1fr}
+  .bottom .wide{grid-column:1/-1}
+}
+@media(max-width:800px){
+  .sidebar{width:62px}.brand{padding:0 14px}.brand strong,.brand small,.nav-label,.nav a span,.profile div{display:none}
+  .nav a{justify-content:center;padding:0}.main{margin-left:62px;width:calc(100% - 62px)}
+  .content{padding:20px 15px}.topbar{padding:0 15px}.hero{display:block}.analyze{margin-top:16px}.analyze input{width:100%}.kpis{grid-template-columns:1fr 1fr}.layout,.bottom{grid-template-columns:1fr}
+}
+@media(max-width:480px){.kpis{grid-template-columns:1fr}.analyze{display:block}.analyze input{width:100%;margin-bottom:8px}.primary{width:100%}}
+
+body.dark-theme .report-status,
+body.dark-theme .report-empty{color:#8b949e!important}
+body.dark-theme .report-cover p{color:#8b949e!important}
+
+</style>
+
+<style id="github-search-enhancement">
+.github-search-panel{margin-top:14px;border:1px solid #d7e4dc;background:rgba(255,255,255,.94);border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(31,60,43,.06)}
+.github-search-panel .search-row{display:flex;gap:10px;align-items:center}
+.github-search-panel input{flex:1;min-width:0;border:1px solid #cbd8d0;border-radius:10px;padding:12px 14px;font:inherit;outline:none}
+.github-search-panel input:focus{border-color:#6baf4a;box-shadow:0 0 0 3px rgba(107,175,74,.12)}
+.github-search-btn{border:0;border-radius:10px;padding:12px 18px;background:#2da44e;color:#fff;font-weight:700;cursor:pointer}
+.github-search-btn:hover{background:#238636}
+.github-search-results{display:grid;gap:8px;margin-top:12px}
+.github-user-result,.github-repo-result{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #e0e8e3;border-radius:10px;background:#fff;cursor:pointer;text-align:left}
+.github-user-result:hover,.github-repo-result:hover{border-color:#6baf4a;background:#f5fbf6}
+.github-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover}
+.github-result-main{flex:1;min-width:0}
+.github-result-title{font-weight:700;color:#24292f}
+.github-result-meta{font-size:12px;color:#6e7781;margin-top:2px}
+.github-search-note{font-size:12px;color:#6e7781;margin-top:8px}
+.github-search-divider{display:flex;align-items:center;gap:10px;margin:12px 0;color:#8a9690;font-size:12px}
+.github-search-divider:before,.github-search-divider:after{content:"";height:1px;background:#e2e9e4;flex:1}
+.github-back{background:#f6f8f7;color:#24292f;border:1px solid #d0d7de}
+.github-back:hover{background:#eef3ef}
+</style>
+
+
+<style id="repointel-functional-icons">
+/* Functional header controls */
+.icon-btn{transition:transform .15s ease,background .15s ease,border-color .15s ease}
+.icon-btn:hover{transform:translateY(-1px)}
+.icon-btn:active{transform:translateY(0)}
+body.dark-theme{
+  background:#0d1117 !important;color:#c9d1d9 !important;
+}
+body.dark-theme .main, body.dark-theme .content{background:#0d1117 !important}
+body.dark-theme .topbar{background:#161b22 !important;border-color:#30363d !important;color:#c9d1d9 !important}
+body.dark-theme .crumb, body.dark-theme .subtitle, body.dark-theme .repo-identity,
+body.dark-theme .kpi-foot, body.dark-theme .github-search-note{color:#8b949e !important}
+body.dark-theme .hero, body.dark-theme .card, body.dark-theme .page-view,
+body.dark-theme .github-search-panel, body.dark-theme .github-user-result,
+body.dark-theme .github-repo-result, body.dark-theme .repo-picker,
+body.dark-theme .table-card, body.dark-theme .insight-card{background:#161b22 !important;border-color:#30363d !important;color:#c9d1d9 !important}
+body.dark-theme h1, body.dark-theme h2, body.dark-theme h3,
+body.dark-theme .kpi-value, body.dark-theme .github-result-title{color:#f0f6fc !important}
+body.dark-theme .github-search-panel input{background:#0d1117;color:#f0f6fc;border-color:#30363d}
+body.dark-theme .github-user-result,.dark-theme .github-repo-result{background:#161b22}
+body.dark-theme .github-user-result:hover, body.dark-theme .github-repo-result:hover{background:#1f2a22 !important;border-color:#3fb950 !important}
+body.dark-theme .github-back{background:#21262d;color:#c9d1d9;border-color:#30363d}
+body.dark-theme .icon-btn{background:#161b22;border-color:#30363d;color:#c9d1d9}
+body.dark-theme .modal-card{background:#161b22;color:#c9d1d9;border-color:#30363d}
+body.dark-theme .modal-card h2{color:#f0f6fc}
+body.dark-theme .setting-row{border-color:#30363d}
+body.dark-theme .setting-muted{color:#8b949e}
+.repointel-modal{position:fixed;inset:0;z-index:9999;background:rgba(13,17,23,.55);display:none;align-items:flex-start;justify-content:flex-end;padding:78px 24px 24px}
+.repointel-modal.open{display:flex}
+.modal-card{width:min(390px,calc(100vw - 32px));background:#fff;border:1px solid #d0d7de;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.22);padding:20px}
+.modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.modal-card h2{margin:0;font-size:18px;color:#24292f}
+.modal-close{border:0;background:transparent;font-size:22px;cursor:pointer;color:#6e7781}
+.setting-row{padding:14px 0;border-top:1px solid #eaeef2;display:flex;justify-content:space-between;gap:16px;align-items:center}
+.setting-row:first-of-type{margin-top:14px}
+.setting-muted{font-size:12px;color:#6e7781}
+.setting-button{border:1px solid #d0d7de;border-radius:8px;background:#f6f8fa;padding:8px 11px;cursor:pointer}
+.setting-button:hover{background:#eef1f3}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#2da44e;margin-right:6px}
+@media(max-width:600px){
+  .repointel-modal{padding:70px 12px 12px}
+  .modal-card{width:100%}
+  .github-search-panel .search-row{flex-direction:column;align-items:stretch}
+}
+</style>
+
+
+<style id="search-modal-fix">
+#githubQuickSearchModal{
+  position:fixed;inset:0;z-index:10000;
+  display:none;align-items:flex-start;justify-content:center;
+  padding:90px 20px 20px;
+  background:rgba(10,20,14,.48);
+  backdrop-filter:blur(4px);
+}
+#githubQuickSearchModal.open{display:flex}
+.quick-search-card{
+  width:min(620px,100%);
+  background:#fff;border:1px solid #d0d7de;border-radius:16px;
+  box-shadow:0 24px 70px rgba(0,0,0,.25);padding:18px;
+}
+.quick-search-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.quick-search-head strong{font-size:17px;color:#24292f}
+.quick-search-close{border:0;background:transparent;font-size:24px;color:#6e7781;cursor:pointer}
+.quick-search-row{display:flex;gap:9px}
+.quick-search-row input{
+  flex:1;min-width:0;border:1px solid #cbd8d0;border-radius:10px;
+  padding:12px 14px;font:inherit;outline:none
+}
+.quick-search-row input:focus{border-color:#2da44e;box-shadow:0 0 0 3px rgba(45,164,78,.14)}
+.quick-search-submit{
+  border:0;border-radius:10px;background:#2da44e;color:#fff;
+  padding:12px 17px;font-weight:700;cursor:pointer
+}
+.quick-search-results{margin-top:12px;max-height:430px;overflow:auto;display:grid;gap:8px}
+.quick-search-result{
+  width:100%;display:flex;align-items:center;gap:12px;text-align:left;
+  border:1px solid #e0e8e3;background:#fff;border-radius:10px;padding:11px;cursor:pointer
+}
+.quick-search-result:hover{border-color:#2da44e;background:#f5fbf6}
+.quick-search-avatar{width:38px;height:38px;border-radius:50%}
+.quick-search-main{flex:1;min-width:0}
+.quick-search-title{font-weight:700;color:#24292f}
+.quick-search-meta{font-size:12px;color:#6e7781;margin-top:2px}
+.quick-search-status{font-size:12px;color:#6e7781;margin-top:9px}
+body.dark-theme #githubQuickSearchModal .quick-search-card{background:#161b22;border-color:#30363d}
+body.dark-theme #githubQuickSearchModal .quick-search-head strong,
+body.dark-theme #githubQuickSearchModal .quick-search-title{color:#f0f6fc}
+body.dark-theme #githubQuickSearchModal .quick-search-row input{
+  background:#0d1117;color:#f0f6fc;border-color:#30363d
+}
+body.dark-theme #githubQuickSearchModal .quick-search-result{
+  background:#161b22;border-color:#30363d
+}
+body.dark-theme #githubQuickSearchModal .quick-search-result:hover{background:#1f2a22;border-color:#3fb950}
+@media(max-width:600px){
+  #githubQuickSearchModal{padding:70px 10px 10px}
+  .quick-search-row{flex-direction:column}
+  .quick-search-submit{width:100%}
+}
+</style>
+
+
+<style id="github-autocomplete-css">
+.quick-search-row-wrap{position:relative;flex:1;min-width:0}
+.quick-search-row-wrap input{width:100%;box-sizing:border-box}
+.github-autocomplete{
+  position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:10002;
+  background:#fff;border:1px solid #d0d7de;border-radius:10px;
+  box-shadow:0 12px 32px rgba(31,35,40,.18);overflow:hidden;display:none;
+}
+.github-autocomplete.open{display:block}
+.github-auto-item{
+  width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border:0;background:#fff;text-align:left;cursor:pointer;
+}
+.github-auto-item:hover,.github-auto-item.active{background:#f3f8f4}
+.github-auto-avatar{width:32px;height:32px;border-radius:50%;flex:none}
+.github-auto-main{min-width:0;flex:1}
+.github-auto-title{display:block;font-weight:700;color:#24292f}
+.github-auto-meta{display:block;font-size:11px;color:#6e7781;margin-top:2px}
+.github-auto-loading{padding:12px;color:#6e7781;font-size:12px}
+body.dark-theme .github-autocomplete{background:#161b22;border-color:#30363d}
+body.dark-theme .github-auto-item{background:#161b22}
+body.dark-theme .github-auto-item:hover,body.dark-theme .github-auto-item.active{background:#1f2a22}
+body.dark-theme .github-auto-title{color:#f0f6fc}
+body.dark-theme .github-auto-meta,body.dark-theme .github-auto-loading{color:#8b949e}
+@media(max-width:600px){
+  .quick-search-row-wrap{width:100%}
+}
+</style>
+
+
+<style id="dark-mode-visibility-fix">
+/* =========================================================
+   RepoIntel — complete dark-mode contrast pass
+   ========================================================= */
+body.dark-theme{
+  background:#0d1117 !important;
+  color:#c9d1d9 !important;
+}
+body.dark-theme .main,
+body.dark-theme .content{
+  background:#0d1117 !important;
+  color:#c9d1d9 !important;
+}
+body.dark-theme .topbar{
+  background:rgba(13,17,23,.96) !important;
+  border-bottom-color:#30363d !important;
+}
+body.dark-theme .crumb{color:#8b949e !important}
+body.dark-theme .crumb strong{color:#f0f6fc !important}
+
+body.dark-theme .hero{
+  border-bottom-color:#30363d !important;
+}
+body.dark-theme .hero h1,
+body.dark-theme .view-title{
+  color:#f0f6fc !important;
+}
+body.dark-theme .subtitle,
+body.dark-theme .view-subtitle{
+  color:#8b949e !important;
+}
+
+/* Repository URL box */
+body.dark-theme .analyze{
+  background:#161b22 !important;
+  border-color:#30363d !important;
+}
+body.dark-theme .analyze input{
+  background:#161b22 !important;
+  color:#f0f6fc !important;
+  caret-color:#58a6ff;
+}
+body.dark-theme .analyze input::placeholder{color:#8b949e !important}
+body.dark-theme .analyze:focus-within{
+  border-color:#58a6ff !important;
+  box-shadow:0 0 0 3px rgba(88,166,255,.18) !important;
+}
+
+/* Every dashboard panel */
+body.dark-theme .card,
+body.dark-theme .page-view,
+body.dark-theme .table-card,
+body.dark-theme .insight-card{
+  background:#161b22 !important;
+  color:#c9d1d9 !important;
+  border-color:#30363d !important;
+}
+body.dark-theme .card-head{
+  background:#161b22 !important;
+  color:#c9d1d9 !important;
+  border-bottom-color:#30363d !important;
+}
+body.dark-theme .card-head h2{
+  color:#f0f6fc !important;
+}
+body.dark-theme .card-head > span{
+  color:#8b949e !important;
+}
+body.dark-theme .kpi-top,
+body.dark-theme .metric-row,
+body.dark-theme .issue-row{
+  color:#c9d1d9 !important;
+}
+body.dark-theme .kpi-value,
+body.dark-theme .stat-big{
+  color:#f0f6fc !important;
+}
+body.dark-theme .kpi-foot{
+  color:#8b949e !important;
+}
+body.dark-theme .kpi-icon{
+  background:#1f3a27 !important;
+  color:#7ee787 !important;
+}
+
+/* Repository identity */
+body.dark-theme .repo-identity{color:#8b949e !important}
+body.dark-theme .repo-identity strong{color:#f0f6fc !important}
+body.dark-theme .repo-mark{
+  box-shadow:0 0 0 3px #1f3a27 !important;
+}
+
+/* Chart + health header was the white area visible in the screenshot */
+body.dark-theme .chart-card .card-head,
+body.dark-theme .health-card .card-head{
+  background:#161b22 !important;
+  border-bottom-color:#30363d !important;
+}
+body.dark-theme .chart{
+  background:#161b22 !important;
+}
+body.dark-theme .gauge-center strong{color:#f0f6fc !important}
+body.dark-theme .gauge-center small{color:#8b949e !important}
+body.dark-theme .metrics,
+body.dark-theme .metric{
+  color:#c9d1d9 !important;
+}
+body.dark-theme .metric-row span{color:#8b949e !important}
+body.dark-theme .metric-row b{color:#f0f6fc !important}
+body.dark-theme .bar{background:#30363d !important}
+body.dark-theme .good{
+  color:#7ee787 !important;
+  background:#1f3a27 !important;
+  border-color:#2ea043 !important;
+}
+
+/* Tables */
+body.dark-theme .table{
+  color:#c9d1d9 !important;
+}
+body.dark-theme .table th{
+  color:#8b949e !important;
+  background:#161b22 !important;
+  border-color:#30363d !important;
+}
+body.dark-theme .table td{
+  color:#c9d1d9 !important;
+  border-color:#30363d !important;
+}
+body.dark-theme .table tbody tr:hover{background:#1c2128 !important}
+body.dark-theme .empty-state{color:#8b949e !important}
+
+/* Issue badges */
+body.dark-theme .badge.green{
+  background:#1f3a27 !important;color:#7ee787 !important;
+}
+body.dark-theme .badge.orange{
+  background:#3d2e00 !important;color:#e3b341 !important;
+}
+body.dark-theme .badge.red{
+  background:#3b171b !important;color:#ff7b72 !important;
+}
+
+/* Languages */
+body.dark-theme .lang,
+body.dark-theme .lang-row,
+body.dark-theme .language-row{
+  color:#c9d1d9 !important;
+}
+body.dark-theme .lang span,
+body.dark-theme .language-name{
+  color:#c9d1d9 !important;
+}
+
+/* AI / insight sections */
+body.dark-theme .insight{
+  background:linear-gradient(135deg,#122018 0%,#161b22 70%) !important;
+  border-color:#2ea043 !important;
+}
+body.dark-theme .insight p{color:#8b949e !important}
+body.dark-theme .footer-note{color:#6e7681 !important}
+
+/* Other views / buttons */
+body.dark-theme .secondary{
+  background:#21262d !important;
+  color:#c9d1d9 !important;
+  border-color:#30363d !important;
+}
+body.dark-theme .secondary:hover{
+  background:#30363d !important;
+  border-color:#58a6ff !important;
+}
+body.dark-theme .repo-picker{
+  background:#161b22 !important;
+  border-color:#30363d !important;
+}
+body.dark-theme .repo-option{
+  background:#161b22 !important;
+  border-color:#30363d !important;
+  color:#c9d1d9 !important;
+}
+body.dark-theme .repo-option:hover{background:#1c2128 !important}
+body.dark-theme .repo-option strong{color:#f0f6fc !important}
+body.dark-theme .repo-option small{color:#8b949e !important}
+
+/* =========================================================
+   RepoIntel Liquid AI — AI Insights experience
+   ========================================================= */
+.ai-liquid{
+  position:relative;
+  overflow:hidden;
+  margin-top:0;
+  padding:0;
+  border:1px solid #2ea043;
+  border-radius:14px;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(46,164,79,.20), transparent 28%),
+    radial-gradient(circle at 8% 100%, rgba(46,164,79,.10), transparent 30%),
+    linear-gradient(135deg,#f8fff9 0%,#ffffff 58%,#f5fbf7 100%);
+  box-shadow:0 14px 40px rgba(46,164,79,.08);
+}
+.ai-liquid::before,
+.ai-liquid::after{
+  content:"";
+  position:absolute;
+  border:1px solid rgba(46,164,79,.13);
+  border-radius:50%;
+  pointer-events:none;
+}
+.ai-liquid::before{width:330px;height:330px;right:-170px;top:-220px}
+.ai-liquid::after{width:220px;height:220px;left:-140px;bottom:-160px}
+.ai-liquid-top{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  padding:18px 20px 15px;
+  border-bottom:1px solid rgba(46,164,79,.16);
+}
+.ai-liquid-brand{display:flex;align-items:center;gap:11px}
+.ai-orb{
+  width:38px;height:38px;border-radius:11px;
+  display:grid;place-items:center;
+  color:#fff;background:#2da44e;
+  font-size:17px;font-weight:800;
+  box-shadow:0 0 0 5px rgba(46,164,79,.12),0 0 28px rgba(46,164,79,.25);
+  animation:repoIntelPulse 2.8s ease-in-out infinite;
+}
+@keyframes repoIntelPulse{
+  0%,100%{box-shadow:0 0 0 5px rgba(46,164,79,.12),0 0 18px rgba(46,164,79,.18)}
+  50%{box-shadow:0 0 0 8px rgba(46,164,79,.07),0 0 32px rgba(46,164,79,.30)}
+}
+.ai-liquid-brand strong{display:block;font-size:13px;color:#1f2328}
+.ai-liquid-brand small{display:block;margin-top:3px;font-size:9px;color:#656d76;letter-spacing:.35px}
+.ai-live{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:6px 9px;border-radius:999px;
+  border:1px solid #b7e3c0;background:#f0fff3;
+  color:#1f883d;font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.6px;
+}
+.ai-live i{width:6px;height:6px;border-radius:50%;background:#2da44e;box-shadow:0 0 0 4px rgba(46,164,79,.12)}
+.ai-liquid-body{position:relative;z-index:2;padding:19px 20px 20px}
+.ai-headline{font-size:17px;font-weight:750;color:#1f2328;margin:0 0 7px}
+.ai-summary{font-size:11px;line-height:1.75;color:#656d76;max-width:920px;margin:0}
+.ai-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:15px}
+.ai-chip{
+  border:1px solid #cdd9d0;background:rgba(255,255,255,.78);
+  color:#1f2328;padding:8px 11px;border-radius:8px;
+  font-size:10px;cursor:pointer;transition:.18s;
+}
+.ai-chip:hover{border-color:#2da44e;color:#1f883d;background:#f4fff6;transform:translateY(-1px)}
+.ai-liquid-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.ai-panel{
+  border:1px solid var(--line);border-radius:11px;background:var(--panel);
+  overflow:hidden;
+}
+.ai-panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-bottom:1px solid var(--line);
+}
+.ai-panel-head strong{font-size:11px;color:var(--text)}
+.ai-panel-head span{font-size:9px;color:var(--muted)}
+.ai-panel-body{padding:13px 14px}
+.ai-score-row{display:flex;align-items:center;gap:15px}
+.ai-score-ring{
+  width:86px;height:86px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;
+  background:conic-gradient(var(--accent) var(--ai-score-angle,0deg),#e7edf0 0);
+  position:relative;
+}
+.ai-score-ring::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--panel)}
+.ai-score-ring b{position:relative;z-index:1;font-size:21px;color:var(--text)}
+.ai-score-copy strong{display:block;font-size:12px;color:var(--text)}
+.ai-score-copy p{margin:5px 0 0;font-size:10px;line-height:1.55;color:var(--muted)}
+.ai-metric{margin:9px 0}
+.ai-metric-top{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:5px}
+.ai-metric-top b{color:var(--text)}
+.ai-meter{height:5px;border-radius:99px;background:#e8edf0;overflow:hidden}
+.ai-meter i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#2da44e,#56d364);width:0;transition:width .7s ease}
+.ai-observation{
+  padding:11px 12px;border-left:3px solid #2da44e;border-radius:7px;
+  background:#f5fbf6;font-size:10px;line-height:1.65;color:#656d76;
+}
+.ai-observation strong{color:#1f2328}
+.ai-ask{
+  margin-top:14px;border:1px solid var(--line);border-radius:10px;
+  background:var(--panel);display:flex;align-items:center;padding:6px;
+}
+.ai-ask input{
+  flex:1;border:0;outline:0;background:transparent;color:var(--text);
+  padding:8px 9px;font-size:10px;min-width:0;
+}
+.ai-ask button{
+  border:0;border-radius:7px;background:#2da44e;color:#fff;
+  padding:8px 12px;font-size:10px;font-weight:700;cursor:pointer;
+}
+.ai-answer{
+  display:none;margin-top:10px;padding:12px 13px;border-radius:9px;
+  border:1px solid #b7e3c0;background:#f0fff3;
+  font-size:10px;line-height:1.7;color:#4b5563;
+}
+.ai-answer.show{display:block;animation:aiAnswerIn .22s ease}
+@keyframes aiAnswerIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.ai-answer strong{color:#1f2328}
+.ai-empty{
+  padding:20px;text-align:center;color:var(--muted);font-size:10px;
+}
+body.dark-theme .ai-liquid{
+  background:
+    radial-gradient(circle at 92% 10%, rgba(46,164,79,.17), transparent 28%),
+    radial-gradient(circle at 8% 100%, rgba(46,164,79,.08), transparent 30%),
+    linear-gradient(135deg,#101b14 0%,#161b22 58%,#101713 100%) !important;
+  border-color:#2ea043 !important;
+}
+body.dark-theme .ai-liquid-top{border-bottom-color:#30363d !important}
+body.dark-theme .ai-liquid-brand strong,
+body.dark-theme .ai-headline,
+body.dark-theme .ai-panel-head strong,
+body.dark-theme .ai-score-copy strong,
+body.dark-theme .ai-score-ring b,
+body.dark-theme .ai-metric-top b,
+body.dark-theme .ai-observation strong{color:#f0f6fc !important}
+body.dark-theme .ai-liquid-brand small,
+body.dark-theme .ai-summary,
+body.dark-theme .ai-panel-head span,
+body.dark-theme .ai-score-copy p,
+body.dark-theme .ai-metric-top,
+body.dark-theme .ai-observation{color:#8b949e !important}
+body.dark-theme .ai-live{background:#122a19 !important;border-color:#2ea043 !important;color:#7ee787 !important}
+body.dark-theme .ai-panel,
+body.dark-theme .ai-ask{background:#161b22 !important;border-color:#30363d !important}
+body.dark-theme .ai-chip{background:#21262d !important;border-color:#30363d !important;color:#c9d1d9 !important}
+body.dark-theme .ai-chip:hover{background:#1c3022 !important;border-color:#2ea043 !important;color:#7ee787 !important}
+body.dark-theme .ai-score-ring{background:conic-gradient(#2da44e var(--ai-score-angle,0deg),#30363d 0) !important}
+body.dark-theme .ai-score-ring::after{background:#161b22 !important}
+body.dark-theme .ai-meter{background:#30363d !important}
+body.dark-theme .ai-observation{background:#122018 !important;border-left-color:#2ea043 !important}
+body.dark-theme .ai-answer{background:#122018 !important;border-color:#2ea043 !important;color:#8b949e !important}
+body.dark-theme .ai-answer strong{color:#f0f6fc !important}
+body.dark-theme .ai-ask input{color:#f0f6fc !important}
+@media(max-width:800px){
+  .ai-liquid-grid{grid-template-columns:1fr}
+  .ai-liquid-top{align-items:flex-start;flex-direction:column}
+  .ai-live{align-self:flex-start}
+}
+
+</style>
+
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo" onclick="showView('overview')" style="cursor:pointer">R</div>
+      <div><strong>RepoIntel</strong><small>REPOSITORY INTELLIGENCE</small></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Workspace</div>
+      <a class="active" href="#" data-view="overview"><span class="icon">⌂</span><span>Overview</span></a>
+      <a href="#" data-view="activity"><span class="icon">↗</span><span>Activity</span></a>
+      <a href="#" data-view="contributors"><span class="icon">♟</span><span>Contributors</span></a>
+      <a href="#" data-view="issues"><span class="icon">◉</span><span>Issues</span></a>
+      <a href="#" data-view="code"><span class="icon">▦</span><span>Code</span></a>
+      <div class="nav-label" style="margin-top:22px">Intelligence</div>
+      <a href="#" data-view="ai"><span class="icon">✦</span><span>AI Insights</span></a>
+      <a href="#" data-view="reports"><span class="icon">▤</span><span>Reports</span></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="profile"><div class="avatar">JP</div><div><span>Project Team</span><small>GitHub Analytics</small></div></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="crumb">Workspace / <strong>Repository Overview</strong></div>
+      <div class="top-actions">
+  <button class="icon-btn" id="headerSearchBtn" type="button" aria-label="Search GitHub" title="Search GitHub">⌕</button>
+  <button class="icon-btn" id="themeToggleBtn" type="button" aria-label="Toggle theme" title="Toggle light/dark theme">☼</button>
+  <button class="icon-btn" id="settingsBtn" type="button" aria-label="Open settings" title="Settings">⚙</button>
+</div>
+    </header>
+
+    <section class="content">
+      <div class="hero">
+        <div>
+          <div id="backend-status" style="font-size:12px;margin:8px 0;color:#6b7280">Checking RepoIntel server…</div>
+    <div class="subtitle">GitHub Repository Intelligence Platform</div>
+          <h1>Repository Overview</h1>
+          <div class="subtitle">Analyze development health, activity and project behavior.</div><div class="repo-identity"><i class="repo-mark"></i><span>GitHub repository intelligence • <strong>live analysis</strong></span></div>
+        </div>
+        <div class="analyze-wrap">
+          <div class="analyze" id="analyzeBox">
+            <input id="repoInput" type="text" placeholder="Paste GitHub repository URL">
+            <button class="primary" onclick="analyzeRepo()">Analyze Repository</button>
+          </div>
+          <div class="url-error" id="urlError"></div>
+          <div style="font-size:9px;color:#71806E;margin-top:6px;text-align:right;max-width:480px">
+            Paste a repository link <b>or any GitHub profile link</b> — RepoIntel will find public repositories for you.
+          </div>
+          <div class="repo-picker" id="repoPicker">
+            <div class="repo-picker-title">Select a public repository to analyze</div>
+            <div id="repoOptions"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid kpis">
+        <div class="card kpi"><div class="kpi-top">Stars <div class="kpi-icon">★</div></div><div class="kpi-value" id="stars">—</div><div class="kpi-foot">Current GitHub count</div></div>
+        <div class="card kpi"><div class="kpi-top">Forks <div class="kpi-icon">⑂</div></div><div class="kpi-value" id="forks">—</div><div class="kpi-foot">Current GitHub count</div></div>
+        <div class="card kpi"><div class="kpi-top">Contributors <div class="kpi-icon">♟</div></div><div class="kpi-value" id="contributorsCount">—</div><div class="kpi-foot">Public contributors</div></div>
+        <div class="card kpi"><div class="kpi-top">Commits <div class="kpi-icon">⌁</div></div><div class="kpi-value" id="commitsCount">—</div><div class="kpi-foot">All-time GitHub commits</div></div>
+        <div class="card kpi"><div class="kpi-top">Open Issues <div class="kpi-icon">!</div></div><div class="kpi-value" id="openIssuesKpi">—</div><div class="kpi-foot">Current open issues</div></div>
+      </div>
+
+      <div class="grid layout">
+        <div class="card chart-card">
+          <div class="card-head"><h2>Development Activity</h2><span>Last 12 weeks</span></div>
+          <div class="chart">
+            <canvas id="commitChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card health-card">
+          <div class="card-head"><h2>Repository Health</h2><span>Overall score</span></div>
+          <div class="health-body">
+            <div class="gauge">
+              <svg viewBox="0 0 140 140"><circle class="gauge-bg" cx="70" cy="70" r="54"/><circle id="healthGauge" class="gauge-value" cx="70" cy="70" r="54"/></svg>
+              <div class="gauge-center"><div><strong id="healthScore">—</strong><small>/ 100</small></div></div>
+            </div>
+            <div class="good" id="healthLabel">● READY TO ANALYZE</div>
+            <div class="metrics">
+              <div class="metric"><div class="metric-row"><span>Development activity</span><b id="activityScore">—</b></div><div class="bar"><div id="activityFill" class="fill" style="width:0%"></div></div></div>
+              <div class="metric"><div class="metric-row"><span>Maintenance</span><b id="maintenanceScore">—</b></div><div class="bar"><div id="maintenanceFill" class="fill" style="width:0%"></div></div></div>
+              <div class="metric"><div class="metric-row"><span>Contributor health</span><b id="contributorScore">—</b></div><div class="bar"><div id="contributorFill" class="fill" style="width:0%"></div></div></div>
+              <div class="metric"><div class="metric-row"><span>Issue health</span><b id="issueScore">—</b></div><div class="bar"><div id="issueFill" class="fill" style="width:0%"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid bottom">
+        <div class="card wide" id="contributorsCard">
+          <div class="card-head"><h2>Top Contributors</h2><span>Contribution share</span></div>
+          <table class="table">
+            <thead><tr><th>#</th><th>Contributor</th><th>Commits</th><th>Share</th></tr></thead>
+            <tbody id="contributorsBody"><tr><td colspan="4" style="text-align:center;color:#71806E">Analyze a repository to load contributors.</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" id="issuesCard">
+          <div class="card-head"><h2>Issue Overview</h2><span>Current</span></div>
+          <div class="issue-row"><span>Open issues</span><span class="badge orange" id="openIssues">—</span></div>
+          <div class="issue-row"><span>Closed issues</span><span class="badge green" id="closedIssues">—</span></div>
+          <div class="issue-row"><span>Avg. resolution</span><span id="avgResolution">—</span></div>
+          <div class="issue-row"><span>Pull requests</span><span class="badge green" id="pullRequests">—</span></div>
+        </div>
+
+        <div class="card" id="languagesCard">
+          <div class="card-head"><h2>Languages</h2><span>Codebase</span></div>
+          <div class="lang" id="languagesList">
+            <div style="font-size:10px;color:#71806E;padding:8px 0">Analyze a repository to load languages.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight">
+        <div class="insight-head"><div class="ai">✦</div> AI Repository Insight <span class="badge green" id="insightBadge">Waiting</span></div>
+        <p id="insight">The repository shows strong and consistent development activity. Contributor participation is healthy, while the growing number of open issues may create additional maintenance pressure. This area should be monitored as the project scales.</p>
+      </div>
+
+      
+      <div id="pageViews">
+        <section class="page-view" data-page="activity">
+          <div class="view-title">Development Activity</div>
+          <div class="view-subtitle">Commit trends and repository development velocity.</div>
+          <div class="card view-full"><div class="card-head"><h2>Commit Activity</h2><span id="activityRange">Last 12 weeks • Live GitHub data</span></div><div class="chart" style="height:330px"><canvas id="activityChartFull"></canvas></div></div>
+          <div class="view-grid" style="margin-top:18px">
+  <div class="card kpi"><div class="kpi-top">All-time commits <div class="kpi-icon">⌁</div></div><div class="stat-big" id="activityAllTimeCommits">—</div><div class="kpi-foot">GitHub repository total</div></div>
+  <div class="card kpi"><div class="kpi-top">Recent commits <div class="kpi-icon">⌁</div></div><div class="stat-big" id="activityCommits">—</div><div class="kpi-foot">Last 12 weeks</div></div>
+  <div class="card kpi"><div class="kpi-top">Repository updated <div class="kpi-icon">◷</div></div><div class="stat-big" id="activityUpdated">—</div><div class="kpi-foot">Last GitHub update</div></div>
+</div>
+        </section>
+
+        <section class="page-view" data-page="contributors">
+          <div class="view-title">Contributors</div><div class="view-subtitle">Who is contributing and how contribution is distributed.</div>
+          <div class="card"><div class="card-head"><h2>Contributor Ranking</h2><span>Live GitHub data</span></div><table class="table"><thead><tr><th>#</th><th>Contributor</th><th>Commits</th><th>Share</th></tr></thead><tbody id="contributorsFullBody"><tr><td colspan="4" class="empty-state">Analyze a repository first.</td></tr></tbody></table></div>
+        </section>
+
+        <section class="page-view" data-page="issues">
+          <div class="view-title">Issues & Pull Requests</div><div class="view-subtitle">Track issue pressure and pull request activity.</div>
+          <div class="view-grid"><div class="card kpi"><div class="kpi-top">Open issues <div class="kpi-icon">!</div></div><div class="stat-big" id="issuesOpenFull">—</div></div><div class="card kpi"><div class="kpi-top">Closed issues <div class="kpi-icon">✓</div></div><div class="stat-big" id="issuesClosedFull">—</div></div><div class="card kpi"><div class="kpi-top">Pull requests <div class="kpi-icon">↗</div></div><div class="stat-big" id="prsFull">—</div></div><div class="card kpi"><div class="kpi-top">Issue health <div class="kpi-icon">◉</div></div><div class="stat-big" id="issueHealthFull">—</div></div></div>
+        </section>
+
+        <section class="page-view" data-page="code">
+          <div class="view-title">Code & Technology</div><div class="view-subtitle">Programming languages detected in the repository.</div>
+          <div class="card"><div class="card-head"><h2>Language Distribution</h2><span>Live GitHub data</span></div><div class="lang" id="languagesFullList"><div class="empty-state">Analyze a repository first.</div></div></div>
+        </section>
+
+        <section class="page-view" data-page="ai">
+          <div class="view-title">AI Insights</div>
+          <div class="view-subtitle">RepoIntel AI interprets the repository currently loaded in this workspace.</div>
+
+          <div class="ai-liquid" id="aiLiquid">
+            <div class="ai-liquid-top">
+              <div class="ai-liquid-brand">
+                <div class="ai-orb">✦</div>
+                <div>
+                  <strong>RepoIntel AI</strong>
+                  <small>LIQUID REPOSITORY INTELLIGENCE</small>
+                </div>
+              </div>
+              <div class="ai-live"><i></i><span id="aiLiveState">Waiting for repository</span></div>
+            </div>
+
+            <div class="ai-liquid-body">
+              <h2 class="ai-headline" id="aiHeadline">Your repository intelligence will appear here.</h2>
+              <p class="ai-summary" id="aiFullInsight">Analyze a repository first. RepoIntel AI will use the live analytics already loaded by this page to build contextual insights.</p>
+
+              <div class="ai-actions">
+                <button class="ai-chip" type="button" onclick="askRepoIntel('Why is the health score what it is?')">Why is the health score like this?</button>
+                <button class="ai-chip" type="button" onclick="askRepoIntel('What should the team improve first?')">What should we improve first?</button>
+                <button class="ai-chip" type="button" onclick="askRepoIntel('Summarize the repository activity.')">Summarize activity</button>
+              </div>
+
+              <div class="ai-liquid-grid">
+                <div class="ai-panel">
+                  <div class="ai-panel-head"><strong>Repository health</strong><span>Live analytics</span></div>
+                  <div class="ai-panel-body">
+                    <div class="ai-score-row">
+                      <div class="ai-score-ring" id="aiScoreRing" style="--ai-score-angle:0deg"><b id="aiHealth">—</b></div>
+                      <div class="ai-score-copy">
+                        <strong id="aiStatus">Waiting</strong>
+                        <p id="aiPriority">Analyze a repository to identify the highest-priority area.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ai-panel">
+                  <div class="ai-panel-head"><strong>What RepoIntel AI sees</strong><span>Contextual signals</span></div>
+                  <div class="ai-panel-body">
+                    <div class="ai-metric"><div class="ai-metric-top"><span>Development activity</span><b id="aiActivityMetric">—</b></div><div class="ai-meter"><i id="aiActivityFill"></i></div></div>
+                    <div class="ai-metric"><div class="ai-metric-top"><span>Maintenance</span><b id="aiMaintenanceMetric">—</b></div><div class="ai-meter"><i id="aiMaintenanceFill"></i></div></div>
+                    <div class="ai-metric"><div class="ai-metric-top"><span>Contributor health</span><b id="aiContributorMetric">—</b></div><div class="ai-meter"><i id="aiContributorFill"></i></div></div>
+                    <div class="ai-metric"><div class="ai-metric-top"><span>Issue health</span><b id="aiIssueMetric">—</b></div><div class="ai-meter"><i id="aiIssueFill"></i></div></div>
+                  </div>
+                </div>
+
+                <div class="ai-panel" style="grid-column:1/-1">
+                  <div class="ai-panel-head"><strong>✦ AI observation</strong><span id="aiObservationRepo">Waiting for repository</span></div>
+                  <div class="ai-panel-body">
+                    <div class="ai-observation" id="aiObservation">Once a repository is analyzed, RepoIntel AI will explain what the numbers mean instead of simply repeating them.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ai-ask">
+                <input id="aiAskInput" type="text" placeholder="Ask RepoIntel about this repository..." autocomplete="off">
+                <button type="button" onclick="askRepoIntel()">Ask</button>
+              </div>
+              <div class="ai-answer" id="aiAnswer"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page-view" data-page="reports">
+          <div class="view-title">Reports</div>
+          <div class="view-subtitle">A presentation-ready repository report built from the live GitHub analytics and expanded with RepoIntel AI.</div>
+
+          <div class="report-toolbar">
+            <div class="report-status" id="reportStatus">Analyze a repository to generate the report.</div>
+            <div class="report-actions">
+              <button class="secondary" type="button" onclick="generateDetailedReport()">✦ Generate AI Report</button>
+              <button class="secondary" type="button" onclick="window.print()">Print / Save PDF</button>
+              <button class="secondary" type="button" onclick="showView('overview')">Back to Overview</button>
+            </div>
+          </div>
+
+          <div id="reportContent" class="report-empty">Your detailed report will appear here after a repository is analyzed.</div>
+        </section>
+      </div>
+
+      <div class="footer-note" id="dataStatus">Waiting for repository analysis</div>
+    </section>
+  </main>
+</div>
+
+<script>
+let lastRepo = null;
+
+function formatNumber(number){
+  if (number >= 1000000) return (number / 1000000).toFixed(1) + "M";
+  if (number >= 1000) return (number / 1000).toFixed(1) + "K";
+  return String(number ?? 0);
+}
+
+function parseGitHubUrl(value){
+  try{
+    const url = new URL(value);
+    if(url.hostname.toLowerCase() !== "github.com") return null;
+
+    const parts = url.pathname.split("/").filter(Boolean);
+
+    // A profile URL such as /username or /username?tab=repositories
+    // is not a repository URL.
+    if(parts.length < 2) return null;
+
+    // Reject GitHub special pages such as /username?tab=repositories,
+    // /login, /settings, etc.
+    const blocked = ["login","settings","notifications","explore","marketplace","features"];
+    if(blocked.includes(parts[0].toLowerCase())) return null;
+
+    return {
+      owner: parts[0],
+      repo: parts[1].replace(/\.git$/, "")
+    };
+  }catch{
+    return null;
+  }
+}
+
+const BACKEND_URL = "https://repointel-pg48.onrender.com";
+
+async function backendFetch(path, options = {}){
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
+
+  try {
+    const response = await fetch(`${BACKEND_URL}${path}`, {
+      ...options,
+      method: options.method || "GET",
+      mode: "cors",
+      cache: "no-store",
+      signal: controller.signal,
+      headers: {
+        "Accept": "application/json",
+        ...(options.headers || {})
+      }
+    });
+
+    const text = await response.text();
+    let data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+
+    if(!response.ok){
+      throw new Error(
+        data.detail ||
+        `RepoIntel backend returned HTTP ${response.status}.`
+      );
+    }
+    return data;
+  } catch (error) {
+    if(error.name === "AbortError"){
+      throw new Error(
+        "The RepoIntel server took too long to respond. Render may be waking up. Please try again in 30–60 seconds."
+      );
+    }
+
+    if(error instanceof TypeError){
+      throw new Error(
+        "Cannot reach the online RepoIntel backend. Check that https://repointel-pg48.onrender.com is live, then refresh this page."
+      );
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function githubFetch(url){
+  // Kept as a compatibility wrapper for profile/repository UI helpers.
+  // All GitHub access now happens server-side.
+  const parsed = new URL(url);
+  if(parsed.pathname.includes("/users/") && parsed.pathname.endsWith("/repos")){
+    const owner = parsed.pathname.split("/").filter(Boolean)[1];
+    return backendFetch(`/api/profile/${encodeURIComponent(owner)}/repos`);
+  }
+  throw new Error("Direct GitHub API access from the browser has been disabled. Use the RepoIntel backend.");
+}
+
+function avatarInitial(name){
+  return (name || "?").charAt(0).toUpperCase();
+}
+
+function updateContributors(contributors){
+  const body = document.getElementById("contributorsBody");
+  contributors = Array.isArray(contributors) ? contributors : [];
+  if(!contributors.length){
+    body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#71806E">No contributor data available.</td></tr>';
+    return;
+  }
+
+  const top = contributors.slice(0, 5);
+  const total = top.reduce((sum, c) => sum + (c.contributions || 0), 0);
+
+  body.innerHTML = top.map((c, i) => {
+    const share = total ? Math.round((c.contributions / total) * 100) : 0;
+    return `<tr>
+      <td class="rank">${String(i + 1).padStart(2, "0")}</td>
+      <td><div class="user"><div class="mini-avatar">${avatarInitial(c.login)}</div>${c.login}</div></td>
+      <td>${formatNumber(c.contributions)}</td>
+      <td>${share}%</td>
+    </tr>`;
+  }).join("");
+}
+
+function updateLanguages(languages){
+  const list = document.getElementById("languagesList");
+  languages = (languages && typeof languages === "object" && !Array.isArray(languages)) ? languages : {};
+  const entries = Object.entries(languages).sort((a,b) => b[1] - a[1]);
+
+  if(!entries.length){
+    list.innerHTML = '<div style="font-size:10px;color:#71806E;padding:8px 0">No language data available.</div>';
+    return;
+  }
+
+  const total = entries.reduce((sum, [, bytes]) => sum + bytes, 0);
+  const dots = ["#6BAF4A","#3f83f8","#25a86a","#e79b35","#e85b5b","#8b6fcb"];
+
+  list.innerHTML = entries.slice(0, 6).map(([name, bytes], i) => {
+    const percent = total ? (bytes / total * 100) : 0;
+    return `<div class="lang-row">
+      <span class="lang-name"><i class="dot" style="background:${dots[i % dots.length]}"></i>${name}</span>
+      <span class="lang-percent">${percent.toFixed(1)}%</span>
+    </div>`;
+  }).join("");
+}
+
+function renderCommitChart(canvasId, commits){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const width = Math.max(rect.width, 320);
+  const height = Math.max(rect.height, 220);
+
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+
+  const data = Array.isArray(commits) ? commits : [];
+  if(!data.length){
+    ctx.fillStyle = "#7b8794";
+    ctx.font = "13px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Analyze a repository to load commit activity.", width / 2, height / 2);
+    ctx.textAlign = "left";
+    return;
+  }
+
+  const values = data.map(x => Number(x.count) || 0);
+  const max = Math.max(...values, 1);
+
+  const left = 42, right = 16, top = 18, bottom = 34;
+  const plotW = Math.max(width - left - right, 100);
+  const plotH = Math.max(height - top - bottom, 80);
+
+  // Grid and labels adapt to the active theme.
+  const darkMode = document.body.classList.contains("dark-theme");
+  ctx.strokeStyle = darkMode ? "#30363d" : "#e7eee8";
+  ctx.lineWidth = 1;
+  ctx.fillStyle = darkMode ? "#8b949e" : "#89958f";
+  ctx.font = "10px Inter, sans-serif";
+
+  for(let i = 0; i <= 4; i++){
+    const y = top + plotH * i / 4;
+    ctx.beginPath();
+    ctx.moveTo(left, y);
+    ctx.lineTo(left + plotW, y);
+    ctx.stroke();
+
+    const label = Math.round(max * (1 - i / 4));
+    ctx.fillText(String(label), 6, y + 3);
+  }
+
+  const points = data.map((item, i) => {
+    const x = left + plotW * i / Math.max(data.length - 1, 1);
+    const y = top + plotH - ((Number(item.count) || 0) / max) * plotH;
+    return {x, y};
+  });
+
+  // Area.
+  ctx.beginPath();
+  points.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+  ctx.lineTo(points[points.length - 1].x, top + plotH);
+  ctx.lineTo(points[0].x, top + plotH);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(107,175,74,.12)";
+  ctx.fill();
+
+  // Line.
+  ctx.beginPath();
+  points.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+  ctx.strokeStyle = "#6BAF4A";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Points.
+  ctx.fillStyle = "#6BAF4A";
+  points.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // X labels.
+  ctx.fillStyle = darkMode ? "#8b949e" : "#89958f";
+  ctx.font = "9px Inter, sans-serif";
+  const step = Math.max(1, Math.ceil(data.length / 6));
+  data.forEach((item, i) => {
+    if(i % step === 0 || i === data.length - 1){
+      const x = points[i].x;
+      ctx.fillText(item.label || "", Math.max(left, x - 16), height - 9);
+    }
+  });
+}
+
+function drawCommitChart(commits){
+  window.lastCommitData = Array.isArray(commits) ? commits : [];
+  renderCommitChart("commitChart", window.lastCommitData);
+}
+
+function drawActivityFullChart(){
+  const data = window.lastCommitData || [];
+  renderCommitChart("activityChartFull", data);
+}
+
+
+async function getAllContributors(owner, repo){
+  let all = [];
+  for(let page = 1; page <= 10; page++){
+    const batch = await githubFetch(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contributors?per_page=100&page=${page}`
+    );
+    if(!Array.isArray(batch)) break;
+    all = all.concat(batch);
+    if(batch.length < 100) break;
+  }
+  return all;
+}
+
+async function getCommitTotal(owner, repo){
+  const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/stats/commit_activity`;
+  for(let attempt=0; attempt<3; attempt++){
+    try{
+      const response = await fetch(url,{
+        headers:{
+          "Accept":"application/vnd.github+json",
+          "X-GitHub-Api-Version":"2022-11-28"
+        }
+      });
+      if(response.status === 202){
+        await new Promise(resolve=>setTimeout(resolve,1200));
+        continue;
+      }
+      if(!response.ok) return null;
+      const text=await response.text();
+      if(!text.trim()) return null;
+      const weeks=JSON.parse(text);
+      if(!Array.isArray(weeks)) return null;
+      return weeks.slice(-12).reduce((sum,w)=>sum+(w.total||0),0);
+    }catch{
+      return null;
+    }
+  }
+  return null;
+}
+
+async function getCommitActivity(owner, repo){
+  const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/stats/commit_activity`;
+
+  for(let attempt = 0; attempt < 3; attempt++){
+    try{
+      const response = await fetch(url, {headers: {"Accept":"application/vnd.github+json"}});
+
+      // GitHub can return 202 while it calculates repository statistics.
+      if(response.status === 202){
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        continue;
+      }
+
+      if(!response.ok) return null;
+
+      const weeks = await response.json();
+      if(!Array.isArray(weeks)) return null;
+
+      return weeks.slice(-12).map(w => {
+        const d = new Date((w.week || 0) * 1000);
+        return {
+          label: d.toLocaleDateString(undefined,{month:"short",day:"numeric"}),
+          count: w.total || 0
+        };
+      });
+    }catch{
+      return null;
+    }
+  }
+
+  return null;
+}
+
+async function getOpenAndClosedIssues(owner, repo){
+  // Search returns total_count, so the dashboard can show the repository's
+  // actual issue/PR counts instead of only the first 100 results.
+  const qBase = encodeURIComponent(`repo:${owner}/${repo}`);
+
+  const [openIssues, closedIssues, pullRequests] = await Promise.all([
+    githubFetch(`https://api.github.com/search/issues?q=${qBase}%20is%3Aissue%20state%3Aopen&per_page=1`),
+    githubFetch(`https://api.github.com/search/issues?q=${qBase}%20is%3Aissue%20state%3Aclosed&per_page=1`),
+    githubFetch(`https://api.github.com/search/issues?q=${qBase}%20is%3Apr&per_page=1`)
+  ]);
+
+  return {
+    openIssues: openIssues.total_count || 0,
+    closedIssues: closedIssues.total_count || 0,
+    pullRequests: pullRequests.total_count || 0
+  };
+}
+
+
+function clamp(value, min = 0, max = 100){
+  return Math.max(min, Math.min(max, value));
+}
+
+function calculateHealthScores(repo, contributors, languages, issueData, commitActivity){
+  // These are transparent, explainable heuristic metrics for the prototype.
+  // They can later be refined by the analytics team using a formal rubric.
+
+  const stars = repo.stargazers_count || 0;
+  const forks = repo.forks_count || 0;
+  const contributorCount = contributors.length || 0;
+  const commitWeeks = commitActivity || [];
+  const totalRecentCommits = commitWeeks.reduce((sum, w) => sum + (w.count || 0), 0);
+
+  // Activity: recent commit volume + contributor count + forks.
+  const commitComponent = clamp(totalRecentCommits / 250 * 60);
+  const contributorComponent = clamp(contributorCount / 20 * 25);
+  const forkComponent = clamp(forks / 1000 * 15);
+  const activity = Math.round(clamp(commitComponent + contributorComponent + forkComponent));
+
+  // Maintenance: recency + presence of releases + repository size/activity signals.
+  const lastUpdate = repo.updated_at ? new Date(repo.updated_at) : null;
+  const daysSinceUpdate = lastUpdate ? (Date.now() - lastUpdate.getTime()) / 86400000 : 999;
+  let recency = daysSinceUpdate <= 7 ? 100 :
+                daysSinceUpdate <= 30 ? 90 :
+                daysSinceUpdate <= 90 ? 75 :
+                daysSinceUpdate <= 180 ? 55 : 25;
+
+  const maintenance = Math.round(clamp(
+    recency * 0.70 +
+    (repo.has_issues ? 15 : 5) +
+    (repo.archived ? 0 : 15)
+  ));
+
+  // Contributor health: more contributors and less extreme concentration is better.
+  const topContribution = contributors[0]?.contributions || 0;
+  const totalContribution = contributors.reduce((sum, c) => sum + (c.contributions || 0), 0);
+  const topShare = totalContribution ? topContribution / totalContribution : 1;
+  const diversityScore = clamp((1 - topShare) * 125);
+  const contributorScore = Math.round(clamp(
+    clamp(contributorCount / 25 * 55) + diversityScore * 0.45
+  ));
+
+  // Issue health: lower open-issue pressure is better, with a small popularity adjustment.
+  const openIssues = issueData.openIssues || 0;
+  const closedIssues = issueData.closedIssues || 0;
+  const totalIssues = openIssues + closedIssues;
+  const closureRate = totalIssues ? closedIssues / totalIssues : 1;
+  const issueLoadPenalty = clamp(openIssues / Math.max(500, stars / 50) * 35);
+  const issueScore = Math.round(clamp(
+    closureRate * 70 + (100 - issueLoadPenalty) * 0.30
+  ));
+
+  // Overall weighted score.
+  const overall = Math.round(
+    activity * 0.30 +
+    maintenance * 0.25 +
+    contributorScore * 0.20 +
+    issueScore * 0.25
+  );
+
+  return { overall, activity, maintenance, contributorScore, issueScore };
+}
+
+function updateHealthUI(scores){
+  document.getElementById("healthScore").textContent = scores.overall;
+  document.getElementById("activityScore").textContent = scores.activity;
+  document.getElementById("maintenanceScore").textContent = scores.maintenance;
+  document.getElementById("contributorScore").textContent = scores.contributorScore;
+  document.getElementById("issueScore").textContent = scores.issueScore;
+
+  document.getElementById("activityFill").style.width = scores.activity + "%";
+  document.getElementById("maintenanceFill").style.width = scores.maintenance + "%";
+  document.getElementById("contributorFill").style.width = scores.contributorScore + "%";
+  document.getElementById("issueFill").style.width = scores.issueScore + "%";
+
+  const gauge = document.getElementById("healthGauge");
+  const circumference = 2 * Math.PI * 54;
+  gauge.style.strokeDasharray = circumference;
+  gauge.style.strokeDashoffset = circumference * (1 - scores.overall / 100);
+
+  const label = document.getElementById("healthLabel");
+  label.className = "good";
+
+  if(scores.overall >= 80){
+    label.textContent = "● GOOD HEALTH";
+  }else if(scores.overall >= 60){
+    label.textContent = "● MODERATE HEALTH";
+    label.classList.add("health-warning");
+  }else{
+    label.textContent = "● NEEDS ATTENTION";
+    label.classList.add("health-danger");
+  }
+}
+
+
+function showInputError(message){
+  const box = document.getElementById("analyzeBox");
+  const input = document.getElementById("repoInput");
+  const error = document.getElementById("urlError");
+
+  box.classList.add("has-error");
+  input.style.outline = "none";
+  error.textContent = message;
+  error.style.display = "block";
+}
+
+function clearInputError(){
+  document.getElementById("analyzeBox").classList.remove("has-error");
+  document.getElementById("urlError").style.display = "none";
+}
+
+
+function parseGitHubInput(value){
+  try{
+    const url = new URL(value.trim());
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    if(host !== "github.com") return null;
+    const parts = url.pathname.split("/").filter(Boolean);
+
+    // /username, /username/, /username?tab=repositories, etc.
+    if(parts.length === 1){
+      const reserved = ["login","signup","settings","notifications","explore","marketplace","features","collections","topics","events","sponsors","orgs"];
+      if(reserved.includes(parts[0].toLowerCase())) return null;
+      return {type:"profile", owner:parts[0]};
+    }
+
+    // /username/repository
+    if(parts.length >= 2){
+      return {type:"repo", owner:parts[0], repo:parts[1].replace(/\.git$/,"")};
+    }
+    return null;
+  }catch{return null;}
+}
+
+async function loadProfileRepositories(owner){
+  const picker = document.getElementById("repoPicker");
+  const options = document.getElementById("repoOptions");
+
+  const repos = await backendFetch(`/api/profile/${encodeURIComponent(owner)}/repos`);
+
+  if(!Array.isArray(repos) || !repos.length){
+    showInputError(`@${owner} has no public repositories.`);
+    picker.style.display = "none";
+    return;
+  }
+
+  clearInputError();
+  window.repoChoices = repos;
+
+  options.innerHTML = repos.map((r, index) => `
+    <button type="button" class="repo-option" data-repo-index="${index}">
+      <span>
+        <strong>${escapeHtml(r.name)}</strong>
+        <small>${escapeHtml(r.description || "No description")} • ★ ${formatNumber(r.stargazers_count)} • ${escapeHtml(r.language || "Language not detected")}</small>
+      </span>
+      <span class="arrow">→</span>
+    </button>
+  `).join("");
+
+  options.querySelectorAll(".repo-option").forEach(button => {
+    button.addEventListener("click", () => {
+      const repo = window.repoChoices[Number(button.dataset.repoIndex)];
+      if(repo) analyzeSelectedRepo(repo.html_url);
+    });
+  });
+
+  picker.style.display = "block";
+}
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+
+function analyzeSelectedRepo(url){
+  const input = document.getElementById("repoInput");
+  const picker = document.getElementById("repoPicker");
+  const insight = document.getElementById("insight");
+
+  input.value = url;
+  picker.style.display = "none";
+  clearInputError();
+
+  insight.textContent = "Repository selected. Fetching live repository analytics...";
+  document.querySelector(".content").scrollIntoView({behavior:"smooth", block:"start"});
+
+  analyzeRepo();
+}
+
+function showView(view){
+  const content = document.querySelector(".content");
+  if(!content) return;
+
+  const overviewBlocks = [
+    content.querySelector(".hero"),
+    content.querySelector(".kpis"),
+    content.querySelector(".layout"),
+    content.querySelector(".bottom"),
+    content.querySelector(".insight")
+  ].filter(Boolean);
+
+  const pageViews = content.querySelector("#pageViews");
+  const footer = content.querySelector("#dataStatus");
+
+  document.querySelectorAll(".nav a[data-view]").forEach(link => {
+    link.classList.toggle("active", link.dataset.view === view);
+  });
+
+  if(view === "overview"){
+    overviewBlocks.forEach(el => el.style.display = "");
+    if(pageViews) pageViews.style.display = "none";
+    if(footer) footer.style.display = "";
+    updateBreadcrumb("Repository Overview");
+    return;
+  }
+
+  overviewBlocks.forEach(el => el.style.display = "none");
+  if(pageViews) pageViews.style.display = "block";
+  if(footer) footer.style.display = "";
+
+  document.querySelectorAll(".page-view").forEach(section => {
+    section.classList.toggle("active", section.dataset.page === view);
+  });
+
+  const titles = {
+    activity: "Development Activity",
+    contributors: "Contributors",
+    issues: "Issues",
+    code: "Code",
+    ai: "AI Insights",
+    reports: "Reports"
+  };
+  updateBreadcrumb(titles[view] || "Repository Overview");
+
+  // Keep the live repository data visible on the secondary pages.
+  syncSecondaryViews(view);
+  if(view === "ai" && typeof window.updateLiquidAI === "function"){
+    requestAnimationFrame(() => window.updateLiquidAI());
+  }
+}
+
+function updateBreadcrumb(label){
+  const crumb = document.querySelector(".crumb");
+  if(crumb) crumb.innerHTML = `Workspace / <strong>${escapeHtml(label)}</strong>`;
+}
+
+
+function escapeReportHtml(value){
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[c]));
+}
+
+function reportMetric(value){
+  return value === null || value === undefined || value === "" ? "N/A" : formatNumber(Number(value) || 0);
+}
+
+function reportPercent(value){
+  return value === null || value === undefined || Number.isNaN(Number(value)) ? "N/A" : `${Number(value).toFixed(1)}%`;
+}
+
+function getLanguageRows(){
+  const languages = window.lastAnalysisData?.languages || {};
+  const entries = Object.entries(languages).sort((a,b)=>b[1]-a[1]);
+  const total = entries.reduce((s,[,v])=>s+(Number(v)||0),0);
+  return entries.slice(0,8).map(([name,bytes])=>({
+    name,
+    percent: total ? ((Number(bytes)||0)/total*100) : 0
+  }));
+}
+
+function getTopContributors(){
+  const contributors = Array.isArray(window.lastAnalysisData?.contributors)
+    ? window.lastAnalysisData.contributors : [];
+  const total = contributors.reduce((s,c)=>s+(Number(c.contributions)||0),0);
+  return contributors.slice(0,8).map(c=>({
+    login:c.login || "Unknown",
+    contributions:Number(c.contributions)||0,
+    share:total ? ((Number(c.contributions)||0)/total*100) : 0
+  }));
+}
+
+function fallbackReportNarrative(){
+  const d = window.lastAnalysisData;
+  if(!d) return "";
+  const repo = d.repo || {};
+  const h = d.health || {};
+  const issues = d.issues || {};
+  const activity = Array.isArray(d.commit_activity) ? d.commit_activity : [];
+  const recent = activity.reduce((s,x)=>s+(Number(x.count)||0),0);
+  const maxWeek = activity.length ? Math.max(...activity.map(x=>Number(x.count)||0)) : 0;
+  const maxWeekItem = activity.find(x => (Number(x.count)||0) === maxWeek);
+
+  const weakest = [
+    ["development activity", Number(h.activity)||0],
+    ["maintenance", Number(h.maintenance)||0],
+    ["contributor health", Number(h.contributorScore)||0],
+    ["issue health", Number(h.issueScore)||0]
+  ].sort((a,b)=>a[1]-b[1])[0];
+
+  return {
+    summary:
+      `${repo.full_name || repo.name || "This repository"} has an overall RepoIntel health score of ${h.overall ?? "N/A"}/100. ` +
+      `GitHub reports ${d.commit_total ?? 0} total commits, while the loaded recent 12-week activity contains ${recent} commits. ` +
+      `The current weakest calculated signal is ${weakest[0]} at ${weakest[1]}/100.`,
+    activity:
+      `The recent activity chart contains ${activity.length} weekly observations. ` +
+      `Across the displayed period, ${recent} commits were recorded. ` +
+      (maxWeekItem ? `The highest observed week is ${maxWeekItem.label} with ${maxWeek} commits. ` : "") +
+      `This recent series should be interpreted separately from the repository's all-time commit total.`,
+    collaboration:
+      `${d.contributors?.length || 0} public contributors are represented in the loaded contributor data. ` +
+      `Contributor health is ${h.contributorScore ?? "N/A"}/100, which reflects both contributor count and contribution distribution.`,
+    maintenance:
+      `There are ${issues.open_issues ?? 0} open issues, ${issues.closed_issues ?? 0} closed issues, and ${issues.pull_requests ?? 0} pull requests in the current GitHub totals. ` +
+      `Issue health is ${h.issueScore ?? "N/A"}/100 and maintenance is ${h.maintenance ?? "N/A"}/100.`,
+    conclusion:
+      `RepoIntel currently rates the repository at ${h.overall ?? "N/A"}/100. ` +
+      `The next improvement priority should be ${weakest[0]}, followed by maintaining the areas that already score strongly.`
+  };
+}
+
+function basicMarkdownToHtml(text){
+  const lines = String(text || "").split(/\r?\n/);
+  let out = "", inList = false;
+
+  const closeList = () => { if(inList){ out += "</ul>"; inList=false; } };
+
+  for(const raw of lines){
+    const line = raw.trim();
+    if(!line){ closeList(); continue; }
+
+    if(/^#{1,3}\s+/.test(line)){
+      closeList();
+      out += `<h4>${escapeReportHtml(line.replace(/^#{1,3}\s+/,""))}</h4>`;
+      continue;
+    }
+    if(/^[A-Z][A-Z \/&-]{3,}$/.test(line)){
+      closeList();
+      out += `<h4>${escapeReportHtml(line)}</h4>`;
+      continue;
+    }
+    if(/^[-*]\s+/.test(line)){
+      if(!inList){ out += "<ul>"; inList=true; }
+      out += `<li>${escapeReportHtml(line.replace(/^[-*]\s+/,""))}</li>`;
+      continue;
+    }
+    closeList();
+    out += `<p>${escapeReportHtml(line)}</p>`;
+  }
+  closeList();
+  return out;
+}
+
+function renderDetailedReport(aiText){
+  const container = document.getElementById("reportContent");
+  const status = document.getElementById("reportStatus");
+  const d = window.lastAnalysisData;
+  if(!container || !d) return;
+
+  const repo = d.repo || {};
+  const h = d.health || {};
+  const issues = d.issues || {};
+  const activity = Array.isArray(d.commit_activity) ? d.commit_activity : [];
+  const recent = activity.reduce((s,x)=>s+(Number(x.count)||0),0);
+  const langs = getLanguageRows();
+  const contributors = getTopContributors();
+  const fallback = fallbackReportNarrative();
+
+  const aiSections = aiText
+    ? basicMarkdownToHtml(aiText)
+    : `<p>${escapeReportHtml(fallback.summary)}</p>
+       <h4>DEVELOPMENT ACTIVITY</h4><p>${escapeReportHtml(fallback.activity)}</p>
+       <h4>COLLABORATION AND CONTRIBUTORS</h4><p>${escapeReportHtml(fallback.collaboration)}</p>
+       <h4>ISSUES AND MAINTENANCE</h4><p>${escapeReportHtml(fallback.maintenance)}</p>
+       <h4>CONCLUSION</h4><p>${escapeReportHtml(fallback.conclusion)}</p>`;
+
+  container.className = "";
+  container.innerHTML = `
+    <div class="report-cover">
+      <h2>${escapeReportHtml(repo.full_name || repo.name || "Repository Report")}</h2>
+      <p>${escapeReportHtml(repo.description || "Repository health and development analysis generated from the currently available GitHub data.")}</p>
+      <div class="report-kpis">
+        <div class="report-kpi"><div class="label">Health</div><div class="value">${h.overall ?? "N/A"}/100</div></div>
+        <div class="report-kpi"><div class="label">All-time commits</div><div class="value">${reportMetric(d.commit_total)}</div></div>
+        <div class="report-kpi"><div class="label">Recent commits</div><div class="value">${formatNumber(recent)}</div></div>
+        <div class="report-kpi"><div class="label">Contributors</div><div class="value">${reportMetric(d.contributors?.length)}</div></div>
+      </div>
+    </div>
+
+    <div class="report-grid">
+      <div class="card report-chart-card report-section">
+        <h3>Development Activity — Last 12 Weeks</h3>
+        <div class="chart"><canvas id="reportActivityChart"></canvas></div>
+      </div>
+      <div class="card report-section" style="padding:18px">
+        <h3>Health Signals</h3>
+        <table class="report-table">
+          <tr><th>Signal</th><th>Score</th></tr>
+          <tr><td>Overall health</td><td><strong>${h.overall ?? "N/A"}/100</strong></td></tr>
+          <tr><td>Development activity</td><td>${h.activity ?? "N/A"}/100</td></tr>
+          <tr><td>Maintenance</td><td>${h.maintenance ?? "N/A"}/100</td></tr>
+          <tr><td>Contributor health</td><td>${h.contributorScore ?? "N/A"}/100</td></tr>
+          <tr><td>Issue health</td><td>${h.issueScore ?? "N/A"}/100</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="report-grid">
+      <div class="card report-section" style="padding:18px">
+        <h3>Repository Metrics</h3>
+        <table class="report-table">
+          <tr><th>Metric</th><th>Current value</th></tr>
+          <tr><td>Stars</td><td>${reportMetric(repo.stargazers_count)}</td></tr>
+          <tr><td>Forks</td><td>${reportMetric(repo.forks_count)}</td></tr>
+          <tr><td>All-time commits</td><td>${reportMetric(d.commit_total)}</td></tr>
+          <tr><td>Open issues</td><td>${reportMetric(issues.open_issues)}</td></tr>
+          <tr><td>Closed issues</td><td>${reportMetric(issues.closed_issues)}</td></tr>
+          <tr><td>Pull requests</td><td>${reportMetric(issues.pull_requests)}</td></tr>
+          <tr><td>Last updated</td><td>${repo.updated_at ? escapeReportHtml(new Date(repo.updated_at).toLocaleString()) : "N/A"}</td></tr>
+        </table>
+      </div>
+      <div class="card report-section" style="padding:18px">
+        <h3>Technology Profile</h3>
+        ${langs.length ? `<table class="report-table">${langs.map(x=>`<tr><td>${escapeReportHtml(x.name)}</td><td>${x.percent.toFixed(1)}%</td></tr>`).join("")}</table>` : `<p>No language data available.</p>`}
+      </div>
+    </div>
+
+    <div class="card report-section" style="padding:18px">
+      <h3>Top Contributors</h3>
+      ${contributors.length ? `<table class="report-table"><tr><th>Contributor</th><th>Contributions</th><th>Share</th></tr>${contributors.map(x=>`<tr><td>${escapeReportHtml(x.login)}</td><td>${formatNumber(x.contributions)}</td><td>${x.share.toFixed(1)}%</td></tr>`).join("")}</table>` : `<p>No contributor data available.</p>`}
+    </div>
+
+    <div class="card report-section report-ai" style="padding:20px">
+      <h3>✦ RepoIntel AI — Detailed Interpretation</h3>
+      ${aiSections}
+    </div>
+  `;
+
+  requestAnimationFrame(() => {
+    renderCommitChart("reportActivityChart", activity);
+  });
+  if(status) status.textContent = aiText
+    ? "AI report generated from live repository data."
+    : "Data-backed report generated. Generate AI Report for the full narrative.";
+}
+
+async function generateDetailedReport(){
+  const d = window.lastAnalysisData;
+  const status = document.getElementById("reportStatus");
+  if(!d){
+    if(status) status.textContent = "Analyze a repository first.";
+    return;
+  }
+
+  renderDetailedReport("");
+  if(status) status.textContent = "RepoIntel AI is drafting the detailed report…";
+
+  try{
+    const r = await backendFetch("/api/ai/report", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({analysis:d})
+    });
+    renderDetailedReport(r.report || "");
+  }catch(e){
+    // The report remains useful even if the AI call is temporarily unavailable.
+    if(status) status.textContent = "AI unavailable — showing the complete data-backed report.";
+    renderDetailedReport("");
+  }
+}
+
+function syncSecondaryViews(view){
+  const contributorFull = document.getElementById("contributorsFullBody");
+  const contributorMain = document.getElementById("contributorsBody");
+  if(contributorFull && contributorMain){
+    contributorFull.innerHTML = contributorMain.innerHTML;
+  }
+
+  const copyMap = {
+    openIssues: "issuesOpenFull",
+    closedIssues: "issuesClosedFull",
+    pullRequests: "prsFull",
+    issueScore: "issueHealthFull",
+    healthScore: "aiHealth"
+  };
+
+  Object.entries(copyMap).forEach(([from, to]) => {
+    const a = document.getElementById(from);
+    const b = document.getElementById(to);
+    if(a && b) b.textContent = a.textContent;
+  });
+
+  const ai = document.getElementById("aiFullInsight");
+  const insight = document.getElementById("insight");
+  if(ai && insight) ai.textContent = insight.textContent;
+
+
+  if(view === "activity"){
+    const total = (window.lastCommitData || []).reduce(
+      (sum, item) => sum + (Number(item.count) || 0), 0
+    );
+    const updated = lastRepo?.updated_at
+      ? new Date(lastRepo.updated_at).toLocaleString()
+      : "—";
+    const a = document.getElementById("activityCommits");
+    const allTime = document.getElementById("activityAllTimeCommits");
+    const u = document.getElementById("activityUpdated");
+    if(a) a.textContent = formatNumber(total);
+    if(allTime) allTime.textContent = formatNumber(window.lastAnalysisData?.commit_total ?? 0);
+    if(u) u.textContent = updated;
+
+    requestAnimationFrame(() => {
+      drawActivityFullChart();
+    });
+  }
+
+  if(view === "reports" && lastRepo){
+    renderDetailedReport("");
+  }
+
+  if(view === "code"){
+    const main = document.getElementById("languagesList");
+    const full = document.getElementById("languagesFullList");
+    if(main && full) full.innerHTML = main.innerHTML;
+  }
+}
+
+// Make sidebar links real buttons/navigation without reloading the page.
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".nav a[data-view]").forEach(link => {
+    link.addEventListener("click", event => {
+      event.preventDefault();
+      showView(link.dataset.view);
+    });
+  });
+
+  // Start on Overview, then restore the last analyzed repository.
+  showView("overview");
+  setTimeout(() => restoreLastRepository(), 120);
+});
+
+
+
+function repoIntelDefaultState(message="Analyze a repository to load live GitHub data."){
+  window.lastRepo = null;
+  window.lastAnalysisData = null;
+  window.lastCommitData = [];
+  window.repoIntelAIInsights = null;
+
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = value;
+  };
+  const setWidth = (id, value) => {
+    const el = document.getElementById(id);
+    if(el) el.style.width = value + "%";
+  };
+
+  ["stars","forks","contributorsCount","commitsCount","openIssues",
+   "closedIssues","pullRequests","activityAllTimeCommits","activityCommits",
+   "activityUpdated","issuesOpenFull","issuesClosedFull","prsFull",
+   "issueHealthFull","aiHealth","aiActivityMetric","aiMaintenanceMetric",
+   "aiContributorMetric","aiIssueMetric"].forEach(id => set(id, "—"));
+
+  ["healthScore","activityScore","maintenanceScore","contributorScore","issueScore"].forEach(id => set(id, "—"));
+  ["activityFill","maintenanceFill","contributorFill","issueFill",
+   "aiActivityFill","aiMaintenanceFill","aiContributorFill","aiIssueFill"].forEach(id => setWidth(id, 0));
+
+  const gauge = document.getElementById("healthGauge");
+  if(gauge){
+    const circumference = 2 * Math.PI * 54;
+    gauge.style.strokeDasharray = circumference;
+    gauge.style.strokeDashoffset = circumference;
+  }
+
+  const label = document.getElementById("healthLabel");
+  if(label){
+    label.className = "good";
+    label.textContent = "● READY TO ANALYZE";
+  }
+
+  set("insight", message);
+  set("aiHeadline", "Your repository intelligence will appear here.");
+  set("aiFullInsight", message);
+  set("aiStatus", "Waiting");
+  set("aiPriority", "Analyze a repository to identify the highest-priority area.");
+  set("aiObservation", "Once a repository is analyzed, RepoIntel AI will explain what the numbers mean.");
+  set("aiObservationRepo", "Waiting for repository");
+  set("aiLiveState", "Waiting for repository");
+  set("reportStatus", message);
+
+  const report = document.getElementById("reportContent");
+  if(report){
+    report.className = "report-empty";
+    report.textContent = message;
+  }
+
+  const contributorBody = document.getElementById("contributorsBody");
+  if(contributorBody){
+    contributorBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#71806E">Analyze a repository to load contributors.</td></tr>';
+  }
+
+  const languageList = document.getElementById("languagesList");
+  if(languageList){
+    languageList.innerHTML = '<div style="font-size:10px;color:#71806E;padding:8px 0">Analyze a repository to load languages.</div>';
+  }
+
+  const aiAnswer = document.getElementById("aiAnswer");
+  if(aiAnswer){
+    aiAnswer.classList.remove("show");
+    aiAnswer.innerHTML = "";
+  }
+
+  drawCommitChart([]);
+}
+
+function saveLastRepository(repo){
+  if(!repo) return;
+  const state = {
+    owner: repo.owner?.login || repo.full_name?.split("/")[0] || "",
+    repo: repo.name || repo.full_name?.split("/")[1] || "",
+    url: repo.html_url || ""
+  };
+  try{
+    localStorage.setItem("repointel-last-repository", JSON.stringify(state));
+  }catch{}
+}
+
+function getSavedRepository(){
+  try{
+    const raw = localStorage.getItem("repointel-last-repository");
+    if(!raw) return null;
+    const state = JSON.parse(raw);
+    if(state?.owner && state?.repo) return state;
+  }catch{}
+  return null;
+}
+
+function clearSavedRepository(){
+  try{ localStorage.removeItem("repointel-last-repository"); }catch{}
+}
+
+async function restoreLastRepository(){
+  const saved = getSavedRepository();
+  if(!saved) return;
+
+  const input = document.getElementById("repoInput");
+  if(input){
+    input.value = saved.url || `https://github.com/${saved.owner}/${saved.repo}`;
+  }
+
+  const insight = document.getElementById("insight");
+  const status = document.getElementById("dataStatus");
+  if(insight) insight.textContent = `Restoring ${saved.owner}/${saved.repo} and refreshing live GitHub data…`;
+  if(status) status.textContent = "Refreshing saved repository…";
+
+  try{
+    await analyzeRepo();
+  }catch{
+    repoIntelDefaultState("The saved repository could not be refreshed. Analyze it again to retry.");
+  }
+}
+
+async function analyzeRepo(){
+  const input = document.getElementById("repoInput");
+  const button = document.querySelector(".primary");
+  const insight = document.getElementById("insight");
+  const status = document.getElementById("dataStatus");
+  const value = input.value.trim();
+
+  clearInputError();
+
+  if(!value){
+    showInputError("Enter a GitHub repository URL.");
+    return;
+  }
+
+  const parsedInput = parseGitHubInput(value);
+  if(!parsedInput){
+    showInputError("Invalid GitHub URL. Use a profile or repository URL.");
+    return;
+  }
+
+  if(parsedInput.type === "profile"){
+    try{
+      button.disabled = true;
+      button.textContent = "Loading...";
+      insight.textContent = `Finding public repositories for @${parsedInput.owner}...`;
+      await loadProfileRepositories(parsedInput.owner);
+    }catch(error){
+      showInputError(error.message);
+      insight.textContent = `Unable to load profile: ${error.message}`;
+    }finally{
+      button.disabled = false;
+      button.textContent = "Analyze Repository";
+    }
+    return;
+  }
+
+  const originalText = button.textContent;
+  button.disabled = true;
+  // Do not mix old repository metrics with the repository currently loading.
+  if(window.lastAnalysisData){
+    const loadingInsight = document.getElementById("insight");
+    if(loadingInsight) loadingInsight.textContent = "Refreshing live GitHub analytics…";
+  }
+  button.textContent = "Analyzing...";
+  insight.textContent = "Securely fetching repository data through the RepoIntel backend...";
+  status.textContent = "Loading live GitHub data...";
+
+  try{
+    const data = await backendFetch(
+      `/api/analyze?owner=${encodeURIComponent(parsedInput.owner)}&repo=${encodeURIComponent(parsedInput.repo)}`
+    );
+
+    const repo = data.repo;
+    lastRepo = repo;
+    window.lastAnalysisData = data;
+    saveLastRepository(repo);
+    window.dispatchEvent(new CustomEvent("repoIntelAnalysisReady"));
+    const contributors = data.contributors || [];
+    const languages = data.languages || {};
+    const commitActivity = data.commit_activity || [];
+    const issueData = data.issues || {};
+    const commitTotal = data.commit_total;
+
+    // commit_total is the all-time GitHub repository total.
+    // commit_activity remains the recent 12-week series used for the activity chart/score.
+    window.lastAnalysisData.commit_total = Number.isFinite(Number(commitTotal)) ? Number(commitTotal) : 0;
+
+    document.getElementById("stars").textContent = formatNumber(repo.stargazers_count);
+    document.getElementById("forks").textContent = formatNumber(repo.forks_count);
+    document.getElementById("contributorsCount").textContent = formatNumber(contributors.length);
+    document.getElementById("openIssuesKpi").textContent = formatNumber(issueData.open_issues);
+    document.getElementById("commitsCount").textContent =
+      commitTotal === null ? "N/A" : formatNumber(commitTotal);
+
+    document.querySelector("h1").textContent = repo.full_name || repo.name;
+
+    const subtitles = document.querySelectorAll(".subtitle");
+    if(subtitles.length > 1){
+      subtitles[1].textContent = repo.description || "No repository description available.";
+    }
+
+    updateContributors(contributors);
+    updateLanguages(languages);
+
+    document.getElementById("openIssues").textContent = formatNumber(issueData.open_issues);
+    document.getElementById("closedIssues").textContent = formatNumber(issueData.closed_issues);
+    document.getElementById("pullRequests").textContent = formatNumber(issueData.pull_requests);
+    document.getElementById("avgResolution").textContent = "Coming next";
+
+    drawCommitChart(commitActivity);
+    const scores = data.health || calculateHealthScores(
+      repo, contributors, languages, issueData, commitActivity
+    );
+    updateHealthUI(scores);
+    const insightBadge = document.getElementById("insightBadge");
+    if(insightBadge){
+      insightBadge.className = "badge " + (scores.overall >= 60 ? "green" : "orange");
+      insightBadge.textContent = scores.overall >= 80 ? "Healthy" : scores.overall >= 60 ? "Moderate" : "Needs attention";
+    }
+    const aiHealth = document.getElementById("aiHealth");
+    const aiStatus = document.getElementById("aiStatus");
+    if(aiHealth) aiHealth.textContent = scores.overall + "/100";
+    if(aiStatus) aiStatus.textContent = "Live analytics ready";
+    if(typeof window.updateLiquidAI === "function"){
+      requestAnimationFrame(() => window.updateLiquidAI());
+    }
+    window.dispatchEvent(new Event("repoIntelAnalysisReady"));
+
+    const language = repo.language || "not specified";
+    const updated = repo.updated_at
+      ? new Date(repo.updated_at).toLocaleDateString()
+      : "unknown";
+
+    insight.textContent =
+      `${repo.full_name} currently scores ${scores.overall}/100 for repository health. ` +
+      `Development activity is ${scores.activity}/100, maintenance is ${scores.maintenance}/100, ` +
+      `contributor health is ${scores.contributorScore}/100, and issue health is ${scores.issueScore}/100. ` +
+      `${formatNumber(contributors.length)} contributors and ${formatNumber(issueData.open_issues)} open issues were found.`;
+
+    status.textContent =
+      `Live data loaded • ${repo.full_name} • Health ${scores.overall}/100 • Updated ${updated}`;
+    const repoDataState = document.getElementById("repoDataState");
+    if(repoDataState) repoDataState.textContent = "● Live repository data";
+
+  }catch(error){
+    console.error(error);
+    repoIntelDefaultState(`Unable to analyze repository: ${error.message}`);
+    showInputError(error.message);
+    status.textContent = "Analysis failed";
+  }finally{
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}
+
+window.addEventListener("resize", () => {
+  if(window.lastCommitData){
+    renderCommitChart("commitChart", window.lastCommitData);
+    const activityPage = document.querySelector('.page-view[data-page="activity"]');
+    if(activityPage && activityPage.classList.contains("active")){
+      renderCommitChart("activityChartFull", window.lastCommitData);
+    }
+  }
+});
+
+// Draw the initial demo-looking empty state.
+drawCommitChart([]);
+
+</script>
+
+<script>
+window.addEventListener("load", async () => {
+  const el = document.getElementById("backend-status");
+  if(!el) return;
+  try {
+    const data = await backendFetch("/api/health");
+    el.textContent = data.github_authenticated
+      ? "● Online • GitHub connected"
+      : "● Online • GitHub authentication missing";
+    el.style.color = data.github_authenticated ? "#238636" : "#b45309";
+  } catch (e) {
+    el.textContent = "● Backend unavailable • " + e.message;
+    el.style.color = "#dc2626";
+  }
+});
+</script>
+
+
+<script id="github-search-logic">
+(() => {
+  const API = "https://repointel-pg48.onrender.com";
+
+  const qInput = () => document.getElementById("githubUserSearch");
+  const qButton = () => document.getElementById("githubSearchBtn");
+  const status = () => document.getElementById("githubSearchStatus");
+  const results = () => document.getElementById("githubSearchResults");
+
+  function esc(v){
+    return String(v ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  async function searchUsers(){
+    const q = qInput()?.value.trim();
+    if(!q) {
+      status().textContent = "Type a GitHub username or name first.";
+      results().innerHTML = "";
+      return;
+    }
+
+    status().textContent = "Searching GitHub…";
+    results().innerHTML = "";
+
+    try{
+      const r = await fetch(`${API}/api/github/search?q=${encodeURIComponent(q)}`, {
+        headers: {Accept:"application/json"},
+        cache:"no-store"
+      });
+      const data = await r.json();
+      if(!r.ok) throw new Error(data.detail || `Search failed (${r.status})`);
+
+      if(!data.items?.length){
+        status().textContent = "No public GitHub accounts found.";
+        return;
+      }
+
+      status().textContent = `${data.items.length} result${data.items.length === 1 ? "" : "s"} found.`;
+      results().innerHTML = data.items.map(user => `
+        <button class="github-user-result" type="button" data-login="${esc(user.login)}">
+          <img class="github-avatar" src="${esc(user.avatar_url)}" alt="">
+          <span class="github-result-main">
+            <span class="github-result-title">${esc(user.login)}</span>
+            <span class="github-result-meta">${esc(user.type)} · Click to view public repositories</span>
+          </span>
+          <span>›</span>
+        </button>
+      `).join("");
+
+      results().querySelectorAll("[data-login]").forEach(btn => {
+        btn.addEventListener("click", () => loadRepos(btn.dataset.login));
+      });
+    } catch(e){
+      status().textContent = e.message || "Could not search GitHub.";
+    }
+  }
+
+  async function loadRepos(login){
+    status().textContent = `Loading public repositories for ${login}…`;
+    results().innerHTML = "";
+
+    try{
+      const r = await fetch(`${API}/api/github/profile/${encodeURIComponent(login)}/repos`, {
+        headers: {Accept:"application/json"},
+        cache:"no-store"
+      });
+      const data = await r.json();
+      if(!r.ok) throw new Error(data.detail || `Could not load repositories (${r.status})`);
+
+      const repos = data.repositories || [];
+      if(!repos.length){
+        status().textContent = `${login} has no public repositories available.`;
+        return;
+      }
+
+      status().textContent = `${repos.length} public repositories found for ${login}.`;
+      results().innerHTML = `
+        <button class="github-search-btn github-back" type="button" id="githubBackToUsers">← Back to accounts</button>
+        ${repos.map(repo => `
+          <button class="github-repo-result" type="button" data-repo-url="${esc(repo.html_url)}">
+            <span class="github-result-main">
+              <span class="github-result-title">${esc(repo.name)}</span>
+              <span class="github-result-meta">
+                ${esc(repo.language || "Code")} · ★ ${Number(repo.stargazers_count || 0).toLocaleString()} ·
+                Updated ${repo.updated_at ? new Date(repo.updated_at).toLocaleDateString() : "—"}
+              </span>
+              <span class="github-result-meta">${esc(repo.description || "No description")}</span>
+            </span>
+            <span>Analyze ›</span>
+          </button>
+        `).join("")}
+      `;
+
+      document.getElementById("githubBackToUsers")?.addEventListener("click", searchUsers);
+
+      results().querySelectorAll("[data-repo-url]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const url = btn.dataset.repoUrl;
+          // Put the selected repository into the existing URL input.
+          const inputs = [...document.querySelectorAll("input")];
+          const repoInput = inputs.find(i => /github/i.test(i.placeholder || "") || /repository/i.test(i.placeholder || ""));
+          if(repoInput){
+            repoInput.value = url;
+            repoInput.dispatchEvent(new Event("input", {bubbles:true}));
+          }
+          // Prefer the existing analyze button rather than duplicating its logic.
+          const analyze = [...document.querySelectorAll("button")].find(b =>
+            /analyze repository/i.test(b.textContent || "")
+          );
+          if(analyze) analyze.click();
+          else status().textContent = "Repository selected. Click Analyze Repository above.";
+        });
+      });
+    } catch(e){
+      status().textContent = e.message || "Could not load repositories.";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    qButton()?.addEventListener("click", searchUsers);
+    qInput()?.addEventListener("keydown", e => {
+      if(e.key === "Enter") searchUsers();
+    });
+  });
+})();
+</script>
+
+
+<div class="repointel-modal" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="settingsTitle">RepoIntel Settings</h2>
+      <button class="modal-close" id="settingsCloseBtn" type="button" aria-label="Close settings">×</button>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <strong>Theme</strong>
+        <div class="setting-muted" id="themeSettingText">Light theme</div>
+      </div>
+      <button class="setting-button" id="modalThemeBtn" type="button">Toggle</button>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <strong>Backend</strong>
+        <div class="setting-muted"><span class="status-dot"></span>RepoIntel API</div>
+      </div>
+      <button class="setting-button" id="refreshBackendBtn" type="button">Check</button>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <strong>Current repository</strong>
+        <div class="setting-muted" id="currentRepoSetting">Not analyzed yet</div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <strong>GitHub token</strong>
+        <div class="setting-muted">Stored on the backend. It is never shown here.</div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <button class="setting-button" id="clearRepoBtn" type="button">Clear repository data</button>
+    </div>
+  </div>
+</div>
+
+
+<script id="repointel-functional-icons-js">
+(() => {
+  const $ = (id) => document.getElementById(id);
+
+  function updateThemeUI(){
+    const dark = document.body.classList.contains("dark-theme");
+    const themeBtn = $("themeToggleBtn");
+    const modalThemeBtn = $("modalThemeBtn");
+    const text = $("themeSettingText");
+    if(themeBtn){
+      themeBtn.textContent = dark ? "☾" : "☼";
+      themeBtn.title = dark ? "Switch to light theme" : "Switch to dark theme";
+    }
+    if(modalThemeBtn) modalThemeBtn.textContent = dark ? "Use light" : "Use dark";
+    if(text) text.textContent = dark ? "Dark GitHub-style theme" : "Light theme";
+    localStorage.setItem("repointel-theme", dark ? "dark" : "light");
+  }
+
+  function toggleTheme(){
+    document.body.classList.toggle("dark-theme");
+    updateThemeUI();
+  }
+
+  function openSettings(){
+    $("settingsModal")?.classList.add("open");
+  }
+  function closeSettings(){
+    $("settingsModal")?.classList.remove("open");
+  }
+
+  function focusGitHubSearch(){
+    const input = $("githubUserSearch");
+    if(!input) return;
+    input.scrollIntoView({behavior:"smooth", block:"center"});
+    setTimeout(() => input.focus(), 350);
+    input.style.boxShadow = "0 0 0 4px rgba(45,164,78,.22)";
+    setTimeout(() => input.style.boxShadow = "", 900);
+  }
+
+  async function refreshBackend(){
+    const status = $("backend-status");
+    const btn = $("refreshBackendBtn");
+    if(btn){ btn.disabled = true; btn.textContent = "Checking…"; }
+    try{
+      const data = await backendFetch("/api/health");
+      if(status){
+        status.textContent = data.github_authenticated
+          ? "● Online • GitHub connected"
+          : "● Online • GitHub authentication missing";
+        status.style.color = data.github_authenticated ? "#238636" : "#b45309";
+      }
+    }catch(e){
+      if(status){
+        status.textContent = "● Backend unavailable • " + e.message;
+        status.style.color = "#dc2626";
+      }
+    }finally{
+      if(btn){ btn.disabled = false; btn.textContent = "Check"; }
+    }
+  }
+
+  function updateCurrentRepo(){
+    const target = $("currentRepoSetting");
+    const input = $("repoInput");
+    if(!target || !input) return;
+    target.textContent = window.lastAnalysisData?.repo?.full_name || input.value.trim() || "Not analyzed yet";
+  }
+
+  function clearRepository(){
+    const input = $("repoInput");
+    const picker = $("repoPicker");
+    const error = $("urlError");
+    if(input) input.value = "";
+    if(picker) picker.style.display = "none";
+    if(error){ error.textContent = ""; error.style.display = "none"; }
+    window.lastRepoData = null;
+    window.lastAnalysisData = null;
+    window.lastCommitData = null;
+    clearSavedRepository();
+    repoIntelDefaultState("Paste a GitHub repository or search for an account to begin.");
+    const insight = $("insight");
+    if(insight) insight.textContent = "Paste a GitHub repository or search for an account to begin.";
+    closeSettings();
+    if(input) input.focus();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    repoIntelDefaultState();
+    const saved = localStorage.getItem("repointel-theme");
+    if(saved === "dark") document.body.classList.add("dark-theme");
+    updateThemeUI();
+
+    $("headerSearchBtn")?.addEventListener("click", focusGitHubSearch);
+    $("themeToggleBtn")?.addEventListener("click", toggleTheme);
+    $("settingsBtn")?.addEventListener("click", () => {
+      updateCurrentRepo();
+      openSettings();
+    });
+    $("settingsCloseBtn")?.addEventListener("click", closeSettings);
+    $("modalThemeBtn")?.addEventListener("click", toggleTheme);
+    $("refreshBackendBtn")?.addEventListener("click", refreshBackend);
+    $("clearRepoBtn")?.addEventListener("click", clearRepository);
+
+    $("settingsModal")?.addEventListener("click", (e) => {
+      if(e.target.id === "settingsModal") closeSettings();
+    });
+    document.addEventListener("keydown", (e) => {
+      if(e.key === "Escape") closeSettings();
+    });
+
+    $("repoInput")?.addEventListener("input", updateCurrentRepo);
+  });
+
+  // Keep the settings panel in sync if the existing analyzer changes the input.
+  const oldAnalyzeSelectedRepo = window.analyzeSelectedRepo;
+  if(typeof oldAnalyzeSelectedRepo === "function" && !window.__repoIntelAnalyzeWrapped){
+    window.__repoIntelAnalyzeWrapped = true;
+    window.analyzeSelectedRepo = function(url){
+      const result = oldAnalyzeSelectedRepo(url);
+      updateCurrentRepo();
+      return result;
+    };
+  }
+})();
+</script>
+
+
+<script id="search-modal-fix-js">
+(() => {
+  const API = "https://repointel-pg48.onrender.com";
+
+  function byId(id){ return document.getElementById(id); }
+
+  function openQuickSearch(){
+    const modal = byId("githubQuickSearchModal");
+    if(!modal) return;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden","false");
+    const input = byId("quickSearchInput");
+    setTimeout(() => input?.focus(), 50);
+  }
+
+  function closeQuickSearch(){
+    const modal = byId("githubQuickSearchModal");
+    if(!modal) return;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden","true");
+  }
+
+  function esc(v){
+    return String(v ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  async function searchQuick(){
+    const input = byId("quickSearchInput");
+    const status = byId("quickSearchStatus");
+    const results = byId("quickSearchResults");
+    const q = input?.value.trim();
+
+    if(!q){
+      status.textContent = "Type a GitHub username, person name or organization.";
+      results.innerHTML = "";
+      input?.focus();
+      return;
+    }
+
+    status.textContent = "Searching GitHub…";
+    results.innerHTML = "";
+
+    try{
+      const r = await fetch(`${API}/api/github/search?q=${encodeURIComponent(q)}`, {
+        headers:{Accept:"application/json"}, cache:"no-store"
+      });
+      const data = await r.json();
+      if(!r.ok) throw new Error(data.detail || `GitHub search failed (${r.status})`);
+
+      if(!data.items?.length){
+        status.textContent = "No public GitHub accounts found.";
+        return;
+      }
+
+      status.textContent = `${data.items.length} account results`;
+      results.innerHTML = data.items.map(u => `
+        <button class="quick-search-result" type="button" data-login="${esc(u.login)}">
+          <img class="quick-search-avatar" src="${esc(u.avatar_url)}" alt="">
+          <span class="quick-search-main">
+            <span class="quick-search-title">${esc(u.login)}</span>
+            <span class="quick-search-meta">${esc(u.type)} · Click to view public repositories</span>
+          </span>
+          <span>›</span>
+        </button>
+      `).join("");
+
+      results.querySelectorAll("[data-login]").forEach(btn => {
+        btn.addEventListener("click", () => loadQuickRepos(btn.dataset.login));
+      });
+    }catch(e){
+      status.textContent = e.message || "Could not reach GitHub search.";
+    }
+  }
+
+  async function loadQuickRepos(login){
+    const status = byId("quickSearchStatus");
+    const results = byId("quickSearchResults");
+    status.textContent = `Loading public repositories for ${login}…`;
+    results.innerHTML = "";
+
+    try{
+      const r = await fetch(`${API}/api/github/profile/${encodeURIComponent(login)}/repos`, {
+        headers:{Accept:"application/json"}, cache:"no-store"
+      });
+      const data = await r.json();
+      if(!r.ok) throw new Error(data.detail || `Could not load repositories (${r.status})`);
+
+      const repos = data.repositories || [];
+      if(!repos.length){
+        status.textContent = `${login} has no public repositories available.`;
+        return;
+      }
+
+      status.textContent = `${repos.length} public repositories`;
+      results.innerHTML = repos.map(repo => `
+        <button class="quick-search-result" type="button" data-repo="${esc(repo.html_url)}">
+          <span class="quick-search-main">
+            <span class="quick-search-title">${esc(repo.name)}</span>
+            <span class="quick-search-meta">
+              ${esc(repo.language || "Code")} · ★ ${Number(repo.stargazers_count||0).toLocaleString()}
+            </span>
+            <span class="quick-search-meta">${esc(repo.description || "No description")}</span>
+          </span>
+          <span>Analyze ›</span>
+        </button>
+      `).join("");
+
+      results.querySelectorAll("[data-repo]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const repoInput = byId("repoInput");
+          if(repoInput) repoInput.value = btn.dataset.repo;
+          closeQuickSearch();
+          if(typeof analyzeRepo === "function") analyzeRepo();
+        });
+      });
+    }catch(e){
+      status.textContent = e.message || "Could not load repositories.";
+    }
+  }
+
+  function bind(){
+    // Replace any previous handler by using an inline property.
+    const icon = byId("headerSearchBtn");
+    if(icon) icon.onclick = openQuickSearch;
+
+    byId("quickSearchClose")?.addEventListener("click", closeQuickSearch);
+    byId("quickSearchSubmit")?.addEventListener("click", searchQuick);
+    byId("quickSearchInput")?.addEventListener("keydown", e => {
+      if(e.key === "Enter") searchQuick();
+      if(e.key === "Escape") closeQuickSearch();
+    });
+    byId("githubQuickSearchModal")?.addEventListener("click", e => {
+      if(e.target.id === "githubQuickSearchModal") closeQuickSearch();
+    });
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", bind);
+  }else{
+    bind();
+  }
+})();
+</script>
+
+
+<div id="githubQuickSearchModal" aria-hidden="true">
+  <div class="quick-search-card" role="dialog" aria-modal="true" aria-labelledby="quickSearchTitle">
+    <div class="quick-search-head">
+      <strong id="quickSearchTitle">Find a GitHub account</strong>
+      <button class="quick-search-close" id="quickSearchClose" type="button" aria-label="Close search">×</button>
+    </div>
+    <div class="quick-search-row">
+      <div class="quick-search-row-wrap">
+        <input id="quickSearchInput" type="search" autocomplete="off"
+               placeholder="Search username, name or organization…" aria-autocomplete="list" aria-controls="githubAutocomplete">
+        <div id="githubAutocomplete" class="github-autocomplete" role="listbox"></div>
+      </div>
+      <button class="quick-search-submit" id="quickSearchSubmit" type="button">Search GitHub</button>
+    </div>
+    <div class="quick-search-status" id="quickSearchStatus">
+      Search a GitHub account, then choose one of its public repositories.
+    </div>
+    <div class="quick-search-results" id="quickSearchResults"></div>
+  </div>
+</div>
+
+
+<script id="repo-input-sample-guard">
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("repoInput");
+  if (input) {
+    const v = (input.value || "").trim();
+    if (/KAAVIYAASREE-VINU\/SIH_PROJECT/i.test(v)) input.value = "";
+  }
+});
+</script>
+
+
+<script id="github-autocomplete-js">
+(() => {
+  const API = "https://repointel-pg48.onrender.com";
+  let timer = null;
+  let controller = null;
+  let lastQuery = "";
+  let activeIndex = -1;
+
+  const el = id => document.getElementById(id);
+
+  function closeAuto(){
+    const box = el("githubAutocomplete");
+    if(box){ box.classList.remove("open"); box.innerHTML = ""; }
+    activeIndex = -1;
+  }
+
+  function esc(v){
+    return String(v ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  function render(items){
+    const box = el("githubAutocomplete");
+    if(!box) return;
+
+    if(!items.length){
+      box.innerHTML = '<div class="github-auto-loading">No matching public GitHub accounts</div>';
+      box.classList.add("open");
+      return;
+    }
+
+    box.innerHTML = items.slice(0,7).map((u,i) => `
+      <button class="github-auto-item" type="button" role="option"
+              data-login="${esc(u.login)}" data-index="${i}">
+        <img class="github-auto-avatar" src="${esc(u.avatar_url)}" alt="">
+        <span class="github-auto-main">
+          <span class="github-auto-title">${esc(u.login)}</span>
+          <span class="github-auto-meta">${esc(u.type)} · public GitHub account</span>
+        </span>
+        <span>›</span>
+      </button>
+    `).join("");
+    box.classList.add("open");
+    activeIndex = -1;
+
+    box.querySelectorAll("[data-login]").forEach(btn => {
+      btn.addEventListener("click", () => choose(btn.dataset.login));
+    });
+  }
+
+  async function autocomplete(q){
+    if(q.length < 2){
+      closeAuto();
+      return;
+    }
+    if(q === lastQuery) return;
+    lastQuery = q;
+
+    if(controller) controller.abort();
+    controller = new AbortController();
+
+    const box = el("githubAutocomplete");
+    if(!box) return;
+    box.innerHTML = '<div class="github-auto-loading">Searching GitHub…</div>';
+    box.classList.add("open");
+
+    try{
+      const r = await fetch(`${API}/api/github/search?q=${encodeURIComponent(q)}`, {
+        headers:{Accept:"application/json"},
+        cache:"no-store",
+        signal:controller.signal
+      });
+      const data = await r.json();
+      if(!r.ok) throw new Error(data.detail || `Search failed (${r.status})`);
+      if(q !== el("quickSearchInput")?.value.trim()) return;
+      render(data.items || []);
+    }catch(e){
+      if(e.name === "AbortError") return;
+      box.innerHTML = `<div class="github-auto-loading">${esc(e.message || "Search unavailable")}</div>`;
+      box.classList.add("open");
+    }
+  }
+
+  function choose(login){
+    const input = el("quickSearchInput");
+    if(input) input.value = login;
+    closeAuto();
+
+    // Use the existing full-search flow when the account is selected.
+    if(typeof window.loadQuickRepos === "function"){
+      window.loadQuickRepos(login);
+    }else{
+      // The full search function in the page is scoped, so click the main
+      // search button to keep the current implementation compatible.
+      const status = el("quickSearchStatus");
+      if(status) status.textContent = `Selected ${login}. Press Search GitHub to view repositories.`;
+      el("quickSearchSubmit")?.focus();
+    }
+  }
+
+  function setActive(index){
+    const items = [...document.querySelectorAll("#githubAutocomplete .github-auto-item")];
+    if(!items.length) return;
+    activeIndex = Math.max(-1, Math.min(index, items.length - 1));
+    items.forEach((x,i) => x.classList.toggle("active", i === activeIndex));
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const input = el("quickSearchInput");
+    const box = el("githubAutocomplete");
+    if(!input) return;
+
+    input.addEventListener("input", () => {
+      const q = input.value.trim();
+      clearTimeout(timer);
+      timer = setTimeout(() => autocomplete(q), 250);
+    });
+
+    input.addEventListener("keydown", e => {
+      const items = [...document.querySelectorAll("#githubAutocomplete .github-auto-item")];
+      if(e.key === "ArrowDown" && items.length){
+        e.preventDefault(); setActive(activeIndex + 1);
+      }else if(e.key === "ArrowUp" && items.length){
+        e.preventDefault(); setActive(activeIndex - 1);
+      }else if(e.key === "Enter" && activeIndex >= 0 && items[activeIndex]){
+        e.preventDefault(); items[activeIndex].click();
+      }else if(e.key === "Escape"){
+        closeAuto();
+      }
+    });
+
+    document.addEventListener("click", e => {
+      if(!e.target.closest("#githubAutocomplete") && !e.target.closest("#quickSearchInput")){
+        closeAuto();
+      }
+    });
+  });
+})();
+</script>
+
+
+
+<script id="liquid-repointer-ai">
+(function(){
+  function num(id){
+    const el = document.getElementById(id);
+    if(!el) return 0;
+    const n = parseFloat(String(el.textContent).replace(/[^\d.-]/g,""));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function setBar(id, value){
+    const el = document.getElementById(id);
+    if(el) el.style.width = Math.max(0, Math.min(100, Number(value)||0)) + "%";
+  }
+
+  function scoreLabel(score){
+    if(score >= 80) return "Strong repository health";
+    if(score >= 60) return "Moderate repository health";
+    return "Needs attention";
+  }
+
+  function buildLiquidInsight(){
+    const repo = window.lastAnalysisData?.repo || window.lastRepo;
+    const health = num("healthScore");
+    const activity = num("activityScore");
+    const maintenance = num("maintenanceScore");
+    const contributor = num("contributorScore");
+    const issue = num("issueScore");
+    const contributors = num("contributorsCount");
+    const issues = num("openIssuesKpi");
+
+    if(!repo || !health){
+      document.getElementById("aiLiveState")?.replaceChildren(document.createTextNode("Waiting for repository"));
+      return;
+    }
+
+    const weak = [
+      ["issue health", issue],
+      ["contributor health", contributor],
+      ["development activity", activity],
+      ["maintenance", maintenance]
+    ].sort((a,b)=>a[1]-b[1])[0];
+
+    let headline = "Repository intelligence is ready.";
+    if(weak[0] === "issue health") headline = "Issue pressure is the clearest improvement opportunity.";
+    else if(weak[0] === "contributor health") headline = "Contributor distribution deserves attention.";
+    else if(weak[0] === "development activity") headline = "Development activity is the main signal to watch.";
+    else headline = "Maintenance is the main signal to watch.";
+
+    const summary =
+      `${repo.full_name || repo.name} is currently assessed at ${health}/100. ` +
+      `${formatNumber(contributors)} public contributors and ${formatNumber(issues)} open issues are in the loaded analytics. ` +
+      `RepoIntel AI identifies ${weak[0]} as the weakest current signal (${weak[1]}/100).`;
+
+    const observation =
+      weak[0] === "issue health"
+        ? `<strong>Why this matters:</strong> Issue health is lower than the other signals, so unresolved work is currently exerting the strongest pressure on the repository score.`
+        : weak[0] === "contributor health"
+        ? `<strong>Why this matters:</strong> Contributor health is comparatively lower, which can indicate contribution concentration or limited participation.`
+        : weak[0] === "development activity"
+        ? `<strong>Why this matters:</strong> Development activity is comparatively lower, so recent delivery velocity is the main area to monitor.`
+        : `<strong>Why this matters:</strong> Maintenance is comparatively lower, so repository freshness and upkeep deserve closer attention.`;
+
+    document.getElementById("aiHeadline").textContent = headline;
+    document.getElementById("aiFullInsight").textContent = summary;
+    document.getElementById("aiStatus").textContent = scoreLabel(health);
+    document.getElementById("aiPriority").textContent = `Priority: ${weak[0]} (${weak[1]}/100).`;
+    document.getElementById("aiObservation").innerHTML = observation;
+    document.getElementById("aiObservationRepo").textContent = repo.full_name || repo.name;
+    document.getElementById("aiLiveState").textContent = "Live repository context";
+
+    document.getElementById("aiHealth").textContent = health + "/100";
+    const ring = document.getElementById("aiScoreRing");
+    if(ring) ring.style.setProperty("--ai-score-angle", (health * 3.6) + "deg");
+
+    [
+      ["aiActivityMetric", activity, "aiActivityFill"],
+      ["aiMaintenanceMetric", maintenance, "aiMaintenanceFill"],
+      ["aiContributorMetric", contributor, "aiContributorFill"],
+      ["aiIssueMetric", issue, "aiIssueFill"]
+    ].forEach(([label,value,bar])=>{
+      const el=document.getElementById(label);
+      if(el) el.textContent = value + "/100";
+      setBar(bar,value);
+    });
+  }
+
+  window.updateLiquidAI = buildLiquidInsight;
+
+  window.askRepoIntel = function(question){
+    const input = document.getElementById("aiAskInput");
+    const answer = document.getElementById("aiAnswer");
+    const q = String(question || input?.value || "").trim();
+    if(!answer) return;
+
+    const repo = window.lastAnalysisData?.repo || window.lastRepo;
+    if(!repo){
+      answer.innerHTML = "<strong>RepoIntel AI:</strong> Analyze a repository first so I have repository context to work with.";
+      answer.classList.add("show");
+      return;
+    }
+
+    const health = num("healthScore");
+    const activity = num("activityScore");
+    const maintenance = num("maintenanceScore");
+    const contributor = num("contributorScore");
+    const issue = num("issueScore");
+    const issues = num("openIssuesKpi");
+    const contributors = num("contributorsCount");
+
+    let response;
+    const lower=q.toLowerCase();
+
+    if(lower.includes("health") || lower.includes("score")){
+      response = `<strong>RepoIntel AI:</strong> ${repo.full_name || repo.name} is at <strong>${health}/100</strong>. ` +
+        `The four signals are development ${activity}/100, maintenance ${maintenance}/100, contributor health ${contributor}/100, and issue health ${issue}/100. ` +
+        `The lowest signal is <strong>${Math.min(activity,maintenance,contributor,issue)}/100</strong>, which is the main reason the overall score is where it is.`;
+    }else if(lower.includes("improve") || lower.includes("fix") || lower.includes("first")){
+      const weakest = [["issue management",issue],["contributor health",contributor],["development activity",activity],["maintenance",maintenance]].sort((a,b)=>a[1]-b[1])[0];
+      response = `<strong>RepoIntel AI:</strong> Start with <strong>${weakest[0]}</strong>. ` +
+        `It is currently ${weakest[1]}/100, making it the weakest signal. ` +
+        `${weakest[0] === "issue management" ? `There are ${formatNumber(issues)} open issues, so prioritizing and closing high-value issues would be the clearest first step.` : `Improving this signal would have the strongest effect on the current repository health picture.`}`;
+    }else if(lower.includes("activity") || lower.includes("commit")){
+      response = `<strong>RepoIntel AI:</strong> Development activity is <strong>${activity}/100</strong>. ` +
+        `This should be read together with ${formatNumber(contributors)} contributors and the repository's loaded commit activity rather than as a standalone number.`;
+    }else{
+      response = `<strong>RepoIntel AI:</strong> I am currently grounded in <strong>${repo.full_name || repo.name}</strong>. ` +
+        `Ask me about its health score, activity, issues, contributors, or what the team should improve first.`;
+    }
+
+    answer.innerHTML = response;
+    answer.classList.remove("show");
+    requestAnimationFrame(()=>answer.classList.add("show"));
+    if(input && question) input.value = question;
+  };
+
+  document.addEventListener("DOMContentLoaded",()=>{
+    document.getElementById("aiAskInput")?.addEventListener("keydown",e=>{
+      if(e.key==="Enter") askRepoIntel();
+    });
+  });
+})();
+</script>
+
+<script id="dark-chart-refresh">
+document.addEventListener("DOMContentLoaded", () => {
+  const themeBtn=document.getElementById("themeToggleBtn");
+  if(!themeBtn) return;
+  themeBtn.addEventListener("click", () => {
+    setTimeout(() => {
+      if(typeof window.lastCommitData !== "undefined" && typeof drawCommitChart === "function"){
+        drawCommitChart(window.lastCommitData);
+      }
+    }, 30);
+  });
+});
+</script>
+
+
+<script id="repo-intel-real-ai">
+(function(){
+  function ctx(){ return window.lastAnalysisData || null; }
+  function esc(v){ return String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c])); }
+  function live(t){ const e=document.getElementById("aiLiveState"); if(e)e.textContent=t; }
+
+  function render(ins){
+    const d=ctx(), repo=d?.repo||{};
+    const h=document.getElementById("aiHeadline"), s=document.getElementById("aiFullInsight");
+    const o=document.getElementById("aiObservation"), p=document.getElementById("aiPriority");
+    const r=document.getElementById("aiObservationRepo");
+    if(h)h.textContent=ins.headline||"RepoIntel AI assessment";
+    if(s)s.textContent=ins.summary||"";
+    if(p)p.textContent=ins.priority?"Priority: "+ins.priority:"AI assessment ready";
+    if(r)r.textContent=repo.full_name||repo.name||"Current repository";
+    if(o){
+      const assessment = String(ins.assessment || "").replace(/\n/g, "<br>");
+      o.innerHTML="<strong>Assessment:</strong> "+esc(assessment).replace(/&lt;br&gt;/g,"<br>")+
+        (ins.strengths?.length?"<br><br><strong>Strengths:</strong> "+ins.strengths.slice(0,5).map(esc).join(" · "):"")+
+        (ins.weaknesses?.length?"<br><br><strong>Watch:</strong> "+ins.weaknesses.slice(0,5).map(esc).join(" · "):"");
+    }
+    window.repoIntelAIInsights=ins;
+    live("AI analysis ready");
+  }
+
+  window.generateRealRepoIntelInsights=async function(){
+    const d=ctx();
+    if(!d){live("Waiting for repository");return;}
+    live("AI analyzing repository…");
+    try{
+      const r=await backendFetch("/api/ai/insights",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(d)
+      });
+      const answer = r.answer || r.insights?.summary || "";
+      render({
+        headline: "Repository intelligence is ready.",
+        summary: answer.split(/\n+/).filter(Boolean)[0] || "AI analysis is ready.",
+        assessment: answer,
+        priority: "See the detailed AI assessment below."
+      });
+    }catch(e){
+      live("AI unavailable");
+      const a=document.getElementById("aiAnswer");
+      if(a){a.innerHTML="<strong>RepoIntel AI:</strong> "+esc(e.message);a.classList.add("show");}
+    }
+  };
+
+  window.askRepoIntel=async function(q){
+    const input=document.getElementById("aiAskInput"), a=document.getElementById("aiAnswer"), d=ctx();
+    q=String(q||input?.value||"").trim();
+    if(!a)return;
+    if(!d){a.innerHTML="<strong>RepoIntel AI:</strong> Analyze a repository first.";a.classList.add("show");return;}
+    if(!q){input?.focus();return;}
+    live("AI thinking…");
+    a.innerHTML="<strong>RepoIntel AI:</strong> Analyzing the current repository…";
+    a.classList.add("show");
+    try{
+      // Send the analyzed repository as explicit AI context.
+      // The backend accepts this under the "analysis" field.
+      // Without this wrapper, the backend receives the dashboard fields
+      // directly and falls back to an empty context.
+      const r=await backendFetch("/api/ai/ask",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({analysis:d,question:q})
+      });
+      a.innerHTML="<strong>RepoIntel AI:</strong> "+esc(r.answer||"No answer returned.").replace(/\n/g,"<br>");
+      live("AI response ready");
+    }catch(e){
+      a.innerHTML="<strong>RepoIntel AI:</strong> "+esc(e.message);
+      live("AI unavailable");
+    }
+  };
+
+  window.addEventListener("repoIntelAnalysisReady",()=>window.generateRealRepoIntelInsights?.());
+})();
+</script>
+
+</body>
+</html>
