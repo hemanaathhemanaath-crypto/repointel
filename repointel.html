@@ -2206,7 +2206,6 @@ async function analyzeRepo(){
     lastRepo = repo;
     window.lastAnalysisData = data;
     saveLastRepository(repo);
-    window.dispatchEvent(new CustomEvent("repoIntelAnalysisReady"));
     const contributors = data.contributors || [];
     const languages = data.languages || {};
     const commitActivity = data.commit_activity || [];
@@ -2635,10 +2634,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if(!d){live("Waiting for repository");return;}
     live("AI analyzing repository…");
     try{
+      const repo = d?.repo || {};
+      const owner = repo?.owner?.login || repo?.full_name?.split("/")[0] || "";
+      const repoName = repo?.name || repo?.full_name?.split("/")[1] || "";
       const r=await backendFetch("/api/ai/insights",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({analysis:d})
+        body:JSON.stringify({owner,repo:repoName,analysis:d})
       });
       const answer = r.answer || r.insights?.summary || "";
       render({
